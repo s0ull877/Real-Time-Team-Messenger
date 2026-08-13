@@ -29,8 +29,8 @@
 - [ ] Настроить Docker
 - [ ] Настроить docker-compose
 - [ ] Подключить PostgreSQL
-- [ ] Настроить конфигурацию через `.env`
-- [ ] Подключить pydantic-settings
+- [+] Настроить конфигурацию через `.env`
+- [+] Подключить pydantic-settings
 
 ---
 
