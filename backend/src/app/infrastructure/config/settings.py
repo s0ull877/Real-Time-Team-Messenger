@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 
 
@@ -24,6 +23,18 @@ class Settings(BaseSettings):
     app_port: int = Field(alias="APP_PORT")
     debug: bool = Field(alias="DEBUG")
 
+    db_password: str = Field(alias="POSTGRES_PASSWORD")
+    db_user: str = Field(alias="POSTGRES_USER")
+    db_name: str = Field(alias="POSTGRES_DB")
+    db_host: str = Field(alias="POSTGRES_HOST")
+    db_port: str = Field(alias="POSTGRES_PORT")
+    db_engine: str = Field(alias="DB_ENGINE")
+
+    @property
+    def database_url(self) -> str:
+        return f"{self.db_engine}://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+
+    
 settings: Settings | None = None
 
 
@@ -34,6 +45,6 @@ def get_settings() -> Settings:
     global settings
 
     if not settings:
-        logging.warning(Path(__file__))
         settings = Settings()
+
     return settings
