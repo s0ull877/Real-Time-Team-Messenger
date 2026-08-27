@@ -28,7 +28,7 @@
 - [+] Настроить FastAPI
 - [+] Настроить Docker
 - [+] Настроить docker-compose
-- [ ] Подключить PostgreSQL
+- [+] Подключить PostgreSQL
 - [+] Настроить конфигурацию через `.env`
 - [+] Подключить pydantic-settings
 

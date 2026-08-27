@@ -1,4 +1,5 @@
 services:
+  
   backend:
     build:
       context: ./backend
@@ -7,3 +8,17 @@ services:
       - .env
     ports:
       - "8000:8000"
+
+  db:
+    image: postgres:18
+    restart: always
+    ports:
+      - '5432:5432'
+    volumes:
+      - rttm_data:/var/lib/postgresql
+    env_file:
+      - .env
+
+
+volumes:
+  rttm_data:
