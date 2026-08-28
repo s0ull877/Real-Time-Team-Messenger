@@ -6,10 +6,8 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_scoped_session,
 )
-from sqlalchemy.orm import declarative_base
 
 settings = get_settings()
-Base = declarative_base()
 
 class Database:
 
