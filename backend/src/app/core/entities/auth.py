@@ -32,7 +32,7 @@ class BannedRefreshToken:
 
 @dataclass(slots=True)
 class EmailVerification:
-    id: UUID
+    id: UUID | None = None
     user_id: UUID
     token_hash: str
     expires_at: datetime

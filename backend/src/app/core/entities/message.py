@@ -5,7 +5,7 @@ from uuid import UUID
 
 @dataclass(slots=True)
 class Message:
-    id: UUID
+    id: UUID | None = None
     room_id: UUID
     author_id: UUID
     encrypted_text: str

@@ -5,7 +5,7 @@ from uuid import UUID
 
 @dataclass(slots=True)
 class User:
-    id: UUID
+    id: UUID | None = None
     username: str
     email: str
     password_hash: str
