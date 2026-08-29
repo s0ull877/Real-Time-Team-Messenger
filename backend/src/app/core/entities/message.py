@@ -9,6 +9,6 @@ class Message:
     room_id: UUID
     author_id: UUID
     encrypted_text: str
-    deleted_at: datetime | None
+    deleted_at: datetime | None = None
     created_at: datetime
     updated_at: datetime

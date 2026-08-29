@@ -36,5 +36,5 @@ class EmailVerification:
     user_id: UUID
     token_hash: str
     expires_at: datetime
-    used_at: datetime | None
+    used_at: datetime | None = None
     created_at: datetime
