@@ -18,3 +18,9 @@ class InvalidVerificationError(Exception):
     """Verification token is invalid, expired, or already used."""
 
     pass
+
+
+class InvalidTokenError(Exception):
+    """Verification token is invalid, expired, or already used."""
+
+    pass
