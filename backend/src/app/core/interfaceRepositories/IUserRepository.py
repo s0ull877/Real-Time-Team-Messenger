@@ -34,7 +34,7 @@ class IUserRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_user_by_email(self, email: str) -> User | None:
+    async def get_by_email(self, email: str) -> User | None:
         """
         Get a user by email.
         """
@@ -48,7 +48,7 @@ class IUserRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def updatе(self, user: User) -> User:
+    async def update(self, user: User) -> User:
         """
         Update an existing user.
 
@@ -61,6 +61,16 @@ class IUserRepository(ABC):
             is_verified: bool
             created_at: datetime
             updated_at: datetime 
+
+
+        UPD: для оптимизации запросов можно разделить метод на update password, email и просто обычные поля
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_password_by_id(self, user_id: UUID, password_hash: str) -> User:
+        """
+        Update password hash by user_id.
         """
         raise NotImplementedError
     
