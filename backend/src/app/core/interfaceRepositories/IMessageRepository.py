@@ -33,7 +33,7 @@ class IMessageRepository(ABC):
         raise NotImplementedError  
     
     @abstractmethod
-    async def get_by_author_id_in_room(self, author_id: UUID, room_id: UUID) -> list[Message] | None:
+    async def get_by_author_id_in_room(self, author_id: UUID, room_id: UUID) -> list[Message]:
         """
         Get user messages in current room.
         """
