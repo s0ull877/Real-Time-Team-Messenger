@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     db_port: str = Field(alias="POSTGRES_PORT")
     db_engine: str = Field(alias="DB_ENGINE")
 
+    server_url: str = Field(alias="SERVER_URL")
+
     @property
     def database_url(self) -> str:
         return f"{self.db_engine}://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
