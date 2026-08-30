@@ -1,7 +1,6 @@
 from .auth import (
     AccessToken,
     BannedRefreshToken,
-    EmailVerification,
     RefreshToken,
     TokenPair,
 )
@@ -9,6 +8,7 @@ from .message import Message
 from .room import Room
 from .room_member import RoomMember
 from .user import User
+from .mail import EmailMessage, EmailVerification
 
 __all__ = [
     "AccessToken",
@@ -20,4 +20,5 @@ __all__ = [
     "RoomMember",
     "TokenPair",
     "User",
+    "EmailMessage",
 ]

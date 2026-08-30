@@ -28,13 +28,3 @@ class TokenPair:
 class BannedRefreshToken:
     jti: str
     banned_at: datetime
-
-
-@dataclass(slots=True)
-class EmailVerification:
-    id: UUID | None = None
-    user_id: UUID
-    token_hash: str
-    expires_at: datetime
-    used_at: datetime | None = None
-    created_at: datetime

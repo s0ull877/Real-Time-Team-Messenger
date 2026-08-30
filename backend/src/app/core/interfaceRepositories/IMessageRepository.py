@@ -6,7 +6,7 @@ from app.core.entities import Message
 
 class IMessageRepository(ABC):
     """
-    Interface for the room repository.
+    Interface for the message repository.
     """
 
     @abstractmethod
