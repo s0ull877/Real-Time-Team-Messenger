@@ -12,3 +12,9 @@ class DuplicateEntryError(Exception):
         self.duplicate_field = duplicate_field
 
         super().__init__(msg)
+
+
+class InvalidVerificationError(Exception):
+    """Verification token is invalid, expired, or already used."""
+
+    pass

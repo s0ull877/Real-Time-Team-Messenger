@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 from abc import ABC, abstractmethod
 
@@ -33,10 +34,17 @@ class IEmailVerificationRepository(ABC):
 
     
     @abstractmethod
-    async def mark_as_used(self, email_verification_id: UUID) -> EmailVerification:
+    async def mark_as_used(self, email_verification_id: UUID, used_at: datetime) -> EmailVerification:
         """
         Update email_verification field `used_at`.
         """
         raise NotImplementedError
     
-  
+
+    @abstractmethod
+    async def delete_by_user_id(self, user_id: UUID) -> None:
+        """
+        Update email_verification field `used_at`.
+        """
+        raise NotImplementedError
+    
