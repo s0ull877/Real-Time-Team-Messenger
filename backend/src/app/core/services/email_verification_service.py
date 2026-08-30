@@ -32,7 +32,7 @@ class EmailVerificationService:
         return (created, token)
 
 
-    async def verify(self, user_id: UUID, token: str) -> EmailVerification:
+    async def verify(self, token: str) -> EmailVerification:
         """
         Verify email verification token.
 
@@ -45,9 +45,6 @@ class EmailVerificationService:
         email_verification = await self.repository.get_by_token_hash(token_hash=token_hash)
 
         if not email_verification:
-            raise InvalidVerificationError("Verification token is invalid.")
-
-        if email_verification.user_id != user_id:
             raise InvalidVerificationError("Verification token is invalid.")
 
         if email_verification.used_at:

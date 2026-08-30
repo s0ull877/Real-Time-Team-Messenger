@@ -20,14 +20,14 @@ class MailService:
         self.broker_producer = broker_producer
 
 
-    async def send_verify_code(self, to: str, code: UUID) -> None:
+    async def send_verify_token(self, to: str, token: UUID) -> None:
         
-        # создаем код верификации привязанный к почте
+        # Create verification email.
 
         email_message = EmailMessage(
             email=to, 
-            subject=f"Verification code for {to}", 
-            body=f"Go to {settings.server_url}verify/{to}/{code} for verifying your account"
+            subject=f"Verification link for {to}", 
+            body=f"Go to {settings.server_url}verify/{token} for verifying your account"
         )
 
 

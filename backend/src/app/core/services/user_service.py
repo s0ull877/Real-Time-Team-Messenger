@@ -101,13 +101,11 @@ class UserService:
         return await self.repository.update(user=user)
 
 
-    async def mark_as_verified(self, user_id: UUID) -> User:
+    async def mark_as_verified(self, user: User) -> User:
         """
         Method for AuthService. Update user is_verified field.
         """
                 
-        user = await self.get_by_id(user_id=user_id)
-
         user.is_verified = True
 
         return await self.repository.update(user=user)
