@@ -24,6 +24,13 @@ class IMessageRepository(ABC):
             updated_at: datetime
         """
         raise NotImplementedError
+
+    @abstractmethod
+    async def get_by_room_id(room_id: UUID, limit: int, offset: int) -> list[Message]:
+        """
+        Get messages in current room.
+        """
+        raise NotImplementedError  
     
     @abstractmethod
     async def get_by_author_id_in_room(self, author_id: UUID, room_id: UUID) -> list[Message] | None:
