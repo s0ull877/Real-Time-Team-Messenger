@@ -15,4 +15,4 @@ class EmailVerification:
     token_hash: str
     expires_at: datetime
     used_at: datetime | None = None
-    created_at: datetime
+    created_at: datetime | None = None

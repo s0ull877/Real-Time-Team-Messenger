@@ -7,4 +7,4 @@ from uuid import UUID
 class RoomMember:
     room_id: UUID
     user_id: UUID
-    joined_at: datetime
+    joined_at: datetime | None = None

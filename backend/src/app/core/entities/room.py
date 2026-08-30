@@ -8,5 +8,5 @@ class Room:
     id: UUID | None = None
     name: str
     owner_id: UUID
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime | None = None
+    updated_at: datetime | None = None

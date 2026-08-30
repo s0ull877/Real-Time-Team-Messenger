@@ -9,7 +9,7 @@ class User:
     username: str
     email: str
     password_hash: str
-    avatar_url: str | None
-    is_verified: bool
-    created_at: datetime
-    updated_at: datetime
+    avatar_url: str | None = None
+    is_verified: bool = False
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
