@@ -47,6 +47,19 @@ class UserService:
         return user
 
 
+    async def get_by_email(self, email: str) -> User:
+        """
+        Get a user by id.
+        If user does not exist raise NotFoundError.
+        """
+        
+        user = await self.repository.get_by_email(email=email)
+        if not user:
+            raise NotFoundError(f"User with this email:{email} does not exist")
+
+        return user
+
+
     async def update_profile_data(
             self, 
             user_id: UUID,
