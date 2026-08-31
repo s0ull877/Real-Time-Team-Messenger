@@ -20,7 +20,7 @@ class MailService:
         self.broker_producer = broker_producer
 
 
-    async def send_verify_token(self, to: str, token: UUID) -> None:
+    async def send_verify_token(self, to: str, token: str) -> None:
         
         # Create verification email.
 
@@ -28,6 +28,38 @@ class MailService:
             email=to, 
             subject=f"Verification link for {to}", 
             body=f"Go to {settings.server_url}verify/{token} for verifying your account"
+        )
+
+
+        await self.broker_producer.send_email(email_message=email_message)
+
+        return
+
+
+    async def send_reset_password_token(self, to: str, token: str) -> None:
+        
+        # Create reset password token email.
+
+        email_message = EmailMessage(
+            email=to, 
+            subject=f"Verification link for {to}", 
+            body=f"Go to {settings.server_url}reset-password/{token} for reset your password"
+        )
+
+
+        await self.broker_producer.send_email(email_message=email_message)
+
+        return
+
+
+    async def send_change_email_token(self, to: str, token: str) -> None:
+        
+        # Create reset password token email.
+
+        email_message = EmailMessage(
+            email=to, 
+            subject=f"Verification link for {to}", 
+            body=f"Go to {settings.server_url}change-mail/{token} for change your email"
         )
 
 

@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 
 from app.infrastructure.config import get_settings
 from app.core.exceptions import NotFoundError, InvalidTokenError
-from app.core.entities import RefreshToken, AccessToken, TokenPair, User
+from app.core.entities import RefreshToken, AccessToken, TokenPair, User, BannedRefreshToken
 from app.core.interfaceRepositories import IBannedRefreshTokenRepository
 
 from . import UserService
@@ -100,11 +100,11 @@ class TokenService:
         if jti is None:
             raise InvalidTokenError("Invalid token")
         
-        banned_token = (
+        is_banned = (
             await self.repository.is_banned(jti=jti)
         )
         
-        if banned_token:
+        if is_banned:
             raise InvalidTokenError("Refresh token is banned")
         
         await self.repository.ban(jti=jti)
@@ -166,3 +166,15 @@ class TokenService:
         
         except (NotFoundError, InvalidTokenError):
             return None
+
+
+    async def ban_refresh_token(self, token: str) -> BannedRefreshToken:
+
+        payload = self._decode_token(token)
+
+        if payload.get("type") != "access":
+            raise InvalidTokenError("Invalid token type")
+
+        jti: str = payload.get("jti")
+
+        return await self.repository.ban(jti=jti)
