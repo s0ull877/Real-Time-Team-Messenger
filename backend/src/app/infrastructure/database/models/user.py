@@ -35,6 +35,6 @@ class User(Base, BaseModelMixin):
         back_populates="author",
     )
 
-    email_verifications: Mapped[list["EmailVerification"]] = relationship(
+    email_action_tokens: Mapped[list["EmailActionToken"]] = relationship(
         back_populates="user",
     )

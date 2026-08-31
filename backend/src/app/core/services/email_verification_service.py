@@ -3,36 +3,37 @@ from uuid import UUID, uuid4
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
-from app.core.entities import EmailVerification
-from app.core.interfaceRepositories import IEmailVerificationRepository
-from app.core.exceptions import InvalidVerificationError
+from app.core.entities import EmailActionToken, ActionEnum
+from app.core.interfaceRepositories import IEmailActionTokenRepository
+from app.core.exceptions import InvalidActionTokenError
 
 
 
 @dataclass
-class EmailVerificationService:
+class EmailActionTokenService:
     
-    repository: IEmailVerificationRepository
+    repository: IEmailActionTokenRepository
 
-    async def create(self, user_id: UUID) -> tuple[EmailVerification, str]:
+    async def create(self, user_id: UUID, action: ActionEnum, expires_in: timedelta = timedelta(hours=1)) -> tuple[EmailActionToken, str]:
         """
-        Create EmailVerification. 
-        Return tuple (created EmailVerification entity, raw token string for sending)
+        Create EmailActionToken. 
+        Return tuple (created EmailActionToken entity, raw token string for sending)
         """
-        await self.repository.delete_by_user_id(user_id=user_id)
+        await self.repository.delete_by_user_id_and_action(user_id=user_id, action=action)
 
         token = str(uuid4())
-        email_verification = EmailVerification(
+        email_action_token = EmailActionToken(
             user_id=user_id,
             token_hash=hashlib.sha256(token.encode()).hexdigest(),
-            expires_at=datetime.now(timezone.utc) + timedelta(hours=1)
+            action=action,
+            expires_at=datetime.now(timezone.utc) + expires_in
         )
 
-        created = await self.repository.create(email_verification)
+        created = await self.repository.create(email_action_token)
         return (created, token)
 
 
-    async def verify(self, token: str) -> EmailVerification:
+    async def verify(self, token: str) -> EmailActionToken:
         """
         Verify email verification token.
 
@@ -42,18 +43,18 @@ class EmailVerificationService:
         If verification is valid, mark it as used and return it.
         """
         token_hash = hashlib.sha256(token.encode()).hexdigest()
-        email_verification = await self.repository.get_by_token_hash(token_hash=token_hash)
+        email_action_token = await self.repository.get_by_token_hash(token_hash=token_hash)
 
-        if not email_verification:
-            raise InvalidVerificationError("Verification token is invalid.")
+        if not email_action_token:
+            raise InvalidActionTokenError("Verification token is invalid.")
 
-        if email_verification.used_at:
-            raise InvalidVerificationError("Verification token has already been used.")
+        if email_action_token.used_at:
+            raise InvalidActionTokenError("Verification token has already been used.")
 
-        if email_verification.expires_at <= datetime.now(timezone.utc):
-            raise InvalidVerificationError("Verification token has expired.")
+        if email_action_token.expires_at <= datetime.now(timezone.utc):
+            raise InvalidActionTokenError("Verification token has expired.")
 
-        return await self.repository.mark_as_used(email_verification_id=email_verification.id, used_at=datetime.now(timezone.utc))
+        return await self.repository.mark_as_used(email_verification_id=email_action_token.id, used_at=datetime.now(timezone.utc))
 
 
 

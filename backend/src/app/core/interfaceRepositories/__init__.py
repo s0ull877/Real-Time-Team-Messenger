@@ -1,5 +1,5 @@
 from .IBannedRefreshTokenRepository import IBannedRefreshTokenRepository
-from .IEmailVerificationRepository import IEmailVerificationRepository
+from .IEmailActionTokenRepository import IEmailActionTokenRepository
 from .IMessageRepository import IMessageRepository
 from .IRoomRepository import IRoomRepository
 from .IRoomMemberRepository import IRoomMemberRepository
@@ -7,7 +7,7 @@ from .IUserRepository import IUserRepository
 
 __all__ = [
     "IBannedRefreshTokenRepository",
-    "IEmailVerificationRepository",
+    "IEmailActionTokenRepository",
     "IMessageRepository",
     "IRoomRepository",
     "IRoomMemberRepository",

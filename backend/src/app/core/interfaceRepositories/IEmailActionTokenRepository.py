@@ -2,16 +2,16 @@ from datetime import datetime
 from uuid import UUID
 from abc import ABC, abstractmethod
 
-from app.core.entities import EmailVerification
+from app.core.entities import EmailActionToken, ActionEnum
 
 
-class IEmailVerificationRepository(ABC):
+class IEmailActionTokenRepository(ABC):
     """
     Interface for the room repository.
     """
 
     @abstractmethod
-    async def create(self, email_verification: EmailVerification) -> EmailVerification:
+    async def create(self, email_verification: EmailActionToken) -> EmailActionToken:
         """
         Create a new email verification.
 
@@ -26,7 +26,7 @@ class IEmailVerificationRepository(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    async def get_by_token_hash(self, token_hash: str) -> EmailVerification | None:
+    async def get_by_token_hash(self, token_hash: str) -> EmailActionToken | None:
         """
         Get email verification by hash.
         """
@@ -34,7 +34,7 @@ class IEmailVerificationRepository(ABC):
 
     
     @abstractmethod
-    async def mark_as_used(self, email_verification_id: UUID, used_at: datetime) -> EmailVerification:
+    async def mark_as_used(self, email_verification_id: UUID, used_at: datetime) -> EmailActionToken:
         """
         Update email_verification field `used_at`.
         """
@@ -42,7 +42,7 @@ class IEmailVerificationRepository(ABC):
     
 
     @abstractmethod
-    async def delete_by_user_id(self, user_id: UUID) -> None:
+    async def delete_by_user_id_and_action(self, user_id: UUID, action: ActionEnum) -> None:
         """
         Update email_verification field `used_at`.
         """
