@@ -11,7 +11,7 @@ class IEmailActionTokenRepository(ABC):
     """
 
     @abstractmethod
-    async def create(self, email_verification: EmailActionToken) -> EmailActionToken:
+    async def create(self, email_action: EmailActionToken) -> EmailActionToken:
         """
         Create a new email verification.
 
@@ -34,7 +34,7 @@ class IEmailActionTokenRepository(ABC):
 
     
     @abstractmethod
-    async def mark_as_used(self, email_verification_id: UUID, used_at: datetime) -> EmailActionToken:
+    async def mark_as_used(self, email_action_id: UUID, used_at: datetime) -> EmailActionToken:
         """
         Update email_verification field `used_at`.
         """

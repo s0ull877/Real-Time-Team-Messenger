@@ -54,7 +54,7 @@ class EmailActionTokenService:
         if email_action_token.expires_at <= datetime.now(timezone.utc):
             raise InvalidActionTokenError("Verification token has expired.")
 
-        return await self.repository.mark_as_used(email_verification_id=email_action_token.id, used_at=datetime.now(timezone.utc))
+        return await self.repository.mark_as_used(email_action_id=email_action_token.id, used_at=datetime.now(timezone.utc))
 
 
 
