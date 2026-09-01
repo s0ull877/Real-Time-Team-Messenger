@@ -31,7 +31,7 @@ class MailService:
         )
 
 
-        await self.broker_producer.publish_email(email_message=email_message)
+        await self.broker_producer.publish(topic="emails",message=email_message)
 
         return
 
@@ -47,7 +47,7 @@ class MailService:
         )
 
 
-        await self.broker_producer.publish_email(email_message=email_message)
+        await self.broker_producer.publish(topic="emails",message=email_message)
 
         return
 
@@ -63,6 +63,6 @@ class MailService:
         )
 
 
-        await self.broker_producer.publish_email(email_message=email_message)
+        await self.broker_producer.publish(topic="emails",message=email_message)
 
         return

@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
-from .entities import EmailMessage
+from typing import Any
 
 
 class IBrokerProducer(ABC):
 
     @abstractmethod
-    async def publish_email(self, email_message: EmailMessage) -> None:
-
+    async def publish(self, topic: str, message: Any) -> None:
         raise NotImplementedError
