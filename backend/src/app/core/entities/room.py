@@ -5,8 +5,8 @@ from uuid import UUID
 
 @dataclass(slots=True)
 class Room:
-    id: UUID | None = None
     name: str
     owner_id: UUID
+    id: UUID | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None

@@ -5,10 +5,10 @@ from uuid import UUID
 
 @dataclass(slots=True)
 class User:
-    id: UUID | None = None
     username: str
     email: str
     password_hash: str
+    id: UUID | None = None
     avatar_url: str | None = None
     is_verified: bool = False
     created_at: datetime | None = None
