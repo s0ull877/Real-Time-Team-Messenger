@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "aiokafka>=0.14.0",
     "aiosmtplib>=5.1.2",
     "alembic>=1.19.1",
     "asyncpg>=0.31.0",
@@ -15,6 +16,7 @@ dependencies = [
     "passlib>=1.7.4",
     "pydantic-settings>=2.14.2",
     "pyjwt>=2.13.0",
+    "pytest>=9.1.1",
     "sqlalchemy>=2.0.52",
     "uvicorn>=0.52.1",
 ]
@@ -28,3 +30,8 @@ build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-name = "app"
+
+[dependency-groups]
+dev = [
+    "pytest-asyncio>=1.4.0",
+]

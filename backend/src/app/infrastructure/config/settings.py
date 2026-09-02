@@ -10,9 +10,10 @@ class Settings(BaseSettings):
 
     # для локальной
     model_config = SettingsConfigDict(
-        env_file=Path(__file__).resolve().parents[5] / ".env"
+        env_file=Path(__file__).resolve().parents[5] / ".env",
+        extra="ignore",
     )
-    # для Docker compose
+    # # для Docker compose
     # model_config = SettingsConfigDict( 
     #     env_file=".env", extra="ignore", 
     # )
@@ -31,6 +32,20 @@ class Settings(BaseSettings):
     db_engine: str = Field(alias="DB_ENGINE")
 
     server_url: str = Field(alias="SERVER_URL")
+
+    secret_key: str = Field(alias="SECRET_KEY")
+    algorithm: str = Field(alias="ALGORITHM")
+    access_token_expire_minutes: int = Field(alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+    refresh_token_expire_days: int = Field(alias="ACCESS_TOKEN_EXPIRE_DAYS")
+
+    kafka_bootstrap_servers: str = Field(alias="KAFKA_BOOTSTRAP_SERVERS")
+
+    smtp_server: str = Field(alias="SMTP_SERVER")
+    smtp_port: str = Field(alias="SMTP_PORT")
+    smtp_username: str = Field(alias="SMTP_USERNAME")
+    smtp_password: str = Field(alias="SMTP_PASSWORD")
+    mail_from: str = Field(alias="MAIL_FROM")
+
 
     @property
     def database_url(self) -> str:

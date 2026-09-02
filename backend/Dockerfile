@@ -32,8 +32,12 @@ COPY --from=builder /app/.venv /app/.venv
 # Код приложения
 COPY --from=builder /app/src /app/src
 
+# Alembic
+COPY --from=builder /app/alembic.ini /app/alembic.ini
+COPY --from=builder /app/alembic /app/alembic
+
 ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 8000
 
-CMD ["app"]
+# CMD ["app"]
