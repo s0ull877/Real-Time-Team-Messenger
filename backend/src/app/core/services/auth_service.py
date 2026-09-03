@@ -1,12 +1,16 @@
 from uuid import uuid4, UUID
 from datetime import timedelta
 from dataclasses import dataclass
-from passlib.context import CryptContext
 
 from app.core.entities import User, TokenPair, ActionEnum
 from app.core.exceptions import NotFoundError, InvalidVerificationError, \
     InvalidCredentialsError, InvalidActionTokenError, DuplicateEntryError
-from . import UserService, EmailActionTokenService, MailService, TokenService
+from app.core.ports import IPasswordHasher
+from .email_action_token_service import EmailActionTokenService
+from .mail_service import MailService
+from .token_service import TokenService
+from .user_dto import CreateUserDTO
+from .user_service import UserService
 
 
 
@@ -17,7 +21,7 @@ class AuthService:
     email_action_service: EmailActionTokenService
     mail_service: MailService
     token_service: TokenService
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    password_hasher: IPasswordHasher
 
     
     async def register(self, email: str, username: str, password: str) -> User:
@@ -31,12 +35,11 @@ class AuthService:
 
         Return the created user.
         """
-        password_hash = self.pwd_context.hash(password)
         user = await self.user_service.create(
-            user=User(
+            user=CreateUserDTO(
                     username=username,
                     email=email,
-                    password_hash=password_hash
+                    password=password,
                 )
         )
 
@@ -84,7 +87,7 @@ class AuthService:
         except NotFoundError as exc:
             raise InvalidCredentialsError("Invalid email or password") from exc
 
-        if not self.pwd_context.verify(password, user.password_hash):
+        if not await self.password_hasher.verify(password, user.password_hash):
             raise InvalidCredentialsError("Invalid email or password")
 
         if not user.is_verified:
@@ -172,15 +175,10 @@ class AuthService:
                 "Invalid token action."
             )
 
-        password_hash = self.pwd_context.hash(
-            new_password,
-        )
-
-
         #! нужно добавить инвалидацию всех рефреш токенов пользователя по user_id
-        return await self.user_service.change_password_hash(
+        return await self.user_service.change_password(
             user_id=email_action_token.user_id,
-            password_hash=password_hash,
+            password=new_password,
         )
 
 
@@ -214,7 +212,10 @@ class AuthService:
             
         else:
 
-            raise DuplicateEntryError(f"Email: {new_email} is busy")
+            raise DuplicateEntryError(
+                msg=f"Email: {new_email} is busy",
+                duplicate_field={"email": new_email},
+            )
 
 
     async def change_email(self, token: str) -> User:

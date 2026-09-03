@@ -7,6 +7,8 @@ from app.infrastructure.config import get_settings
 from app.infrastructure.broker.kafka import KafkaProducer
 from app.infrastructure.broker.kafka import EmailConsumer
 from app.infrastructure.SMTPclient import SMTPClient
+from app.interface.exception_handlers import register_exception_handlers
+from app.interface.users import router as users_router
 
 app_settings = get_settings()
 
@@ -48,3 +50,6 @@ app = FastAPI(
     title=app_settings.app_name,
     debug=app_settings.debug
 )
+
+app.include_router(users_router)
+register_exception_handlers(app)

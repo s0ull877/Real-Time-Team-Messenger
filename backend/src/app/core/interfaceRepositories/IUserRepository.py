@@ -2,6 +2,16 @@ from uuid import UUID
 from abc import ABC, abstractmethod
 
 from app.core.entities import User
+from app.core.exceptions import RepositoryError
+from .user_dto import CreateUserRepositoryDTO
+
+
+class UserAlreadyExistsRepositoryError(RepositoryError):
+    def __init__(self, field: str, value: str) -> None:
+        self.field = field
+        self.value = value
+
+        super().__init__(f"Duplicate user field: {field}")
 
 
 class IUserRepository(ABC):
@@ -10,9 +20,11 @@ class IUserRepository(ABC):
     """
 
     @abstractmethod
-    async def create(self, user: User) -> User:
+    async def create(self, user: CreateUserRepositoryDTO) -> User:
         """
         Create a new user.
+
+        Raise UserAlreadyExistsRepositoryError if a unique field already exists.
 
         class User:
             id: UUID

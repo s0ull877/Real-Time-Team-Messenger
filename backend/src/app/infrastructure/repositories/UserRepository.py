@@ -4,10 +4,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
 from app.core.entities import User
-from app.core.exceptions import NotFoundError, DuplicateEntryError
-from app.core.interfaceRepositories import IUserRepository
+from app.core.exceptions import NotFoundError
+from app.core.interfaceRepositories import (
+    CreateUserRepositoryDTO,
+    IUserRepository,
+    UserAlreadyExistsRepositoryError,
+)
 
 from app.infrastructure.database.models import User as UserModel
+
 
 
 class UserRepository(IUserRepository):
@@ -16,6 +21,24 @@ class UserRepository(IUserRepository):
     """
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    @staticmethod
+    def _raise_for_unique_constraint(
+        exc: IntegrityError,
+        user: CreateUserRepositoryDTO | User,
+    ) -> None:
+        cause = getattr(exc.orig, "__cause__", None)
+        constraint_name = getattr(cause, "constraint_name", None)
+        field = {
+            "users_email_key": "email",
+            "users_username_key": "username",
+        }.get(constraint_name)
+
+        if field:
+            raise UserAlreadyExistsRepositoryError(
+                field=field,
+                value=getattr(user, field),
+            ) from exc
 
 
     def _to_entity(self, user_model: UserModel) -> User:
@@ -34,7 +57,7 @@ class UserRepository(IUserRepository):
         )
 
 
-    async def create(self, user: User) -> User:
+    async def create(self, user: CreateUserRepositoryDTO) -> User:
         """
         Create a new user.
 
@@ -49,7 +72,8 @@ class UserRepository(IUserRepository):
             updated_at: datetime 
 
         Raises:
-            IntegrityError: If a database integrity constraint is violated.
+            UserAlreadyExistsRepositoryError: If email or username already exists.
+            IntegrityError: If another integrity constraint is violated.
         """
         user_model = UserModel(
             email=user.email,
@@ -62,10 +86,10 @@ class UserRepository(IUserRepository):
         self.session.add(user_model)
 
         try:
-            await self.session.commit()
+            await self.session.flush()
             await self.session.refresh(user_model)
-        except IntegrityError:
-            await self.session.rollback()
+        except IntegrityError as exc:
+            self._raise_for_unique_constraint(exc, user)
             raise
 
         return self._to_entity(user_model)
@@ -162,10 +186,10 @@ class UserRepository(IUserRepository):
         user_model.avatar_url = user.avatar_url
 
         try:
-            await self.session.commit()
+            await self.session.flush()
             await self.session.refresh(user_model)
-        except IntegrityError:
-            await self.session.rollback()
+        except IntegrityError as exc:
+            self._raise_for_unique_constraint(exc, user)
             raise
 
         return self._to_entity(user_model)
@@ -190,16 +214,11 @@ class UserRepository(IUserRepository):
         user_model = result.scalar_one_or_none()
 
         if user_model is None:
-            await self.session.rollback()
             raise NotFoundError(
                 f"User with id:{user_id} not found"
             )
 
-        try:
-            await self.session.commit()
-        except IntegrityError:
-            await self.session.rollback()
-            raise
+        await self.session.flush()
 
         return self._to_entity(user_model)
 
@@ -219,8 +238,4 @@ class UserRepository(IUserRepository):
                 f"User with id:{user_id} not found"
             )
 
-        try:
-            await self.session.commit()
-        except IntegrityError:
-            await self.session.rollback()
-            raise
+        await self.session.flush()

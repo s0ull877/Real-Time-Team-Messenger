@@ -1,10 +1,28 @@
-class NotFoundError(Exception): 
+class AppError(Exception):
+    """Base application error."""
+
+    pass
+
+
+class RepositoryError(AppError):
+    """Base repository error."""
+
+    pass
+
+
+class ServiceError(AppError):
+    """Base service error."""
+
+    pass
+
+
+class NotFoundError(AppError):
     """Resource not found."""
 
     pass
 
 
-class DuplicateEntryError(Exception):
+class DuplicateEntryError(ServiceError):
     """Duplicate entry."""
 
     def __init__(self, msg: str, duplicate_field: dict) -> None:

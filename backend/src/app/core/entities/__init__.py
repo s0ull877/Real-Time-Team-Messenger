@@ -14,7 +14,7 @@ __all__ = [
     "AccessToken",
     "BannedRefreshToken",
     "EmailActionToken",
-    "ActionEnum"
+    "ActionEnum",
     "Message",
     "RefreshToken",
     "Room",

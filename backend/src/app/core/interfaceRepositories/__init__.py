@@ -3,7 +3,8 @@ from .IEmailActionTokenRepository import IEmailActionTokenRepository
 from .IMessageRepository import IMessageRepository
 from .IRoomRepository import IRoomRepository
 from .IRoomMemberRepository import IRoomMemberRepository
-from .IUserRepository import IUserRepository
+from .IUserRepository import IUserRepository, UserAlreadyExistsRepositoryError
+from .user_dto import CreateUserRepositoryDTO
 
 __all__ = [
     "IBannedRefreshTokenRepository",
@@ -12,4 +13,6 @@ __all__ = [
     "IRoomRepository",
     "IRoomMemberRepository",
     "IUserRepository",
+    "UserAlreadyExistsRepositoryError",
+    "CreateUserRepositoryDTO",
 ]
