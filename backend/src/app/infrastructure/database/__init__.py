@@ -1,5 +1,5 @@
 from .session import database
-from .unit_of_work import SQLAlchemyUnitOfWork
+from .transaction import SQLAlchemyTransaction
 
 
-__all__ = ["database", "SQLAlchemyUnitOfWork"]
+__all__ = ["database", "SQLAlchemyTransaction"]

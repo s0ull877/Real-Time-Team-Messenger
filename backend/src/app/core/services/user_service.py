@@ -1,14 +1,14 @@
 from dataclasses import dataclass
-from collections.abc import Callable
 from typing import NoReturn
 from uuid import UUID
 
 from app.core.entities import User
 from app.core.interfaceRepositories import (
     CreateUserRepositoryDTO,
+    IUserRepository,
     UserAlreadyExistsRepositoryError,
 )
-from app.core.ports import IPasswordHasher, IUnitOfWork
+from app.core.ports import IPasswordHasher, ITransaction
 from app.core.exceptions import (
     DuplicateEntryError,
     NotFoundError,
@@ -28,7 +28,8 @@ class UserAlreadyExistsError(ServiceError):
 
 @dataclass
 class UserService:
-    unit_of_work_factory: Callable[[], IUnitOfWork]
+    repository: IUserRepository
+    transaction: ITransaction
     password_hasher: IPasswordHasher
 
     @staticmethod
@@ -51,14 +52,13 @@ class UserService:
             email=user.email,
             password_hash=await self.password_hasher.hash(user.password),
         )
-        async with self.unit_of_work_factory() as unit_of_work:
-            try:
-                created_user = await unit_of_work.users.create(repository_user)
-            except UserAlreadyExistsRepositoryError as exc:
-                self._raise_user_already_exists(exc)
+        try:
+            created_user = await self.repository.create(repository_user)
+        except UserAlreadyExistsRepositoryError as exc:
+            self._raise_user_already_exists(exc)
 
-            await unit_of_work.commit()
-            return created_user
+        await self.transaction.commit()
+        return created_user
 
 
     async def get_by_id(self, user_id: UUID) -> User:
@@ -67,12 +67,11 @@ class UserService:
         If user does not exist raise NotFoundError.
         """
         
-        async with self.unit_of_work_factory() as unit_of_work:
-            user = await unit_of_work.users.get_by_id(user_id=user_id)
-            if not user:
-                raise NotFoundError(f"User with this id:{user_id} does not exist")
+        user = await self.repository.get_by_id(user_id=user_id)
+        if not user:
+            raise NotFoundError(f"User with this id:{user_id} does not exist")
 
-            return user
+        return user
 
 
     async def get_by_email(self, email: str) -> User:
@@ -81,12 +80,11 @@ class UserService:
         If user does not exist raise NotFoundError.
         """
         
-        async with self.unit_of_work_factory() as unit_of_work:
-            user = await unit_of_work.users.get_by_email(email=email)
-            if not user:
-                raise NotFoundError(f"User with this email:{email} does not exist")
+        user = await self.repository.get_by_email(email=email)
+        if not user:
+            raise NotFoundError(f"User with this email:{email} does not exist")
 
-            return user
+        return user
 
 
     async def update_profile_data(
@@ -101,34 +99,31 @@ class UserService:
         If user does not exist raise NotFoundError.
         """
 
-        async with self.unit_of_work_factory() as unit_of_work:
-            user = await unit_of_work.users.get_by_id(user_id=user_id)
-            if not user:
-                raise NotFoundError(f"User with this id:{user_id} does not exist")
+        user = await self.repository.get_by_id(user_id=user_id)
+        if not user:
+            raise NotFoundError(f"User with this id:{user_id} does not exist")
 
-            if username is not None:
-                existing_user = await unit_of_work.users.get_by_username(
-                    username=username
+        if username is not None:
+            existing_user = await self.repository.get_by_username(username=username)
+
+            if existing_user and existing_user.id != user.id:
+                raise DuplicateEntryError(
+                    msg=f"Username: {username} is busy",
+                    duplicate_field={"username": username},
                 )
 
-                if existing_user and existing_user.id != user.id:
-                    raise DuplicateEntryError(
-                        msg=f"Username: {username} is busy",
-                        duplicate_field={"username": username},
-                    )
+            user.username = username
 
-                user.username = username
+        if avatar_url is not None:
+            user.avatar_url = avatar_url
 
-            if avatar_url is not None:
-                user.avatar_url = avatar_url
+        try:
+            updated_user = await self.repository.update(user=user)
+        except UserAlreadyExistsRepositoryError as exc:
+            self._raise_user_already_exists(exc)
 
-            try:
-                updated_user = await unit_of_work.users.update(user=user)
-            except UserAlreadyExistsRepositoryError as exc:
-                self._raise_user_already_exists(exc)
-
-            await unit_of_work.commit()
-            return updated_user
+        await self.transaction.commit()
+        return updated_user
 
 
     async def update_email(self, user_id: UUID,  email: str) -> User:
@@ -138,67 +133,63 @@ class UserService:
         If user does not exist, raise NotFoundError.
         If email belongs to another user, raise DuplicateEntryError.
         """
-        async with self.unit_of_work_factory() as unit_of_work:
-            user = await unit_of_work.users.get_by_id(user_id=user_id)
-            if not user:
-                raise NotFoundError(f"User with this id:{user_id} does not exist")
+        user = await self.repository.get_by_id(user_id=user_id)
+        if not user:
+            raise NotFoundError(f"User with this id:{user_id} does not exist")
 
-            existing_user = await unit_of_work.users.get_by_email(email=email)
-            if existing_user and existing_user.id != user.id:
-                raise DuplicateEntryError(
-                    msg=f"Email: {email} is busy",
-                    duplicate_field={"email": email},
-                )
+        existing_user = await self.repository.get_by_email(email=email)
+        if existing_user and existing_user.id != user.id:
+            raise DuplicateEntryError(
+                msg=f"Email: {email} is busy",
+                duplicate_field={"email": email},
+            )
 
-            user.email = email
+        user.email = email
 
-            try:
-                updated_user = await unit_of_work.users.update(user=user)
-            except UserAlreadyExistsRepositoryError as exc:
-                self._raise_user_already_exists(exc)
+        try:
+            updated_user = await self.repository.update(user=user)
+        except UserAlreadyExistsRepositoryError as exc:
+            self._raise_user_already_exists(exc)
 
-            await unit_of_work.commit()
-            return updated_user
+        await self.transaction.commit()
+        return updated_user
 
 
     async def mark_as_verified(self, user_id: UUID) -> User:
         """
         Method for AuthService. Update user is_verified field.
         """
-        async with self.unit_of_work_factory() as unit_of_work:
-            user = await unit_of_work.users.get_by_id(user_id=user_id)
-            if not user:
-                raise NotFoundError(f"User with this id:{user_id} does not exist")
+        user = await self.repository.get_by_id(user_id=user_id)
+        if not user:
+            raise NotFoundError(f"User with this id:{user_id} does not exist")
 
-            user.is_verified = True
-            updated_user = await unit_of_work.users.update(user=user)
-            await unit_of_work.commit()
-            return updated_user
+        user.is_verified = True
+        updated_user = await self.repository.update(user=user)
+        await self.transaction.commit()
+        return updated_user
 
 
     async def delete(self, user_id: UUID) -> None:
         """
         Delete user.
         """
-        async with self.unit_of_work_factory() as unit_of_work:
-            user = await unit_of_work.users.get_by_id(user_id=user_id)
-            if not user:
-                raise NotFoundError(f"User with this id:{user_id} does not exist")
+        user = await self.repository.get_by_id(user_id=user_id)
+        if not user:
+            raise NotFoundError(f"User with this id:{user_id} does not exist")
 
-            await unit_of_work.users.delete(user_id=user.id)
-            await unit_of_work.commit()
+        await self.repository.delete(user_id=user.id)
+        await self.transaction.commit()
 
 
     async def change_password(self, user_id: UUID, password: str) -> User:
         password_hash = await self.password_hasher.hash(password)
-        async with self.unit_of_work_factory() as unit_of_work:
-            user = await unit_of_work.users.get_by_id(user_id=user_id)
-            if not user:
-                raise NotFoundError(f"User with this id:{user_id} does not exist")
+        user = await self.repository.get_by_id(user_id=user_id)
+        if not user:
+            raise NotFoundError(f"User with this id:{user_id} does not exist")
 
-            updated_user = await unit_of_work.users.update_password_by_id(
-                user_id=user.id,
-                password_hash=password_hash,
-            )
-            await unit_of_work.commit()
-            return updated_user
+        updated_user = await self.repository.update_password_by_id(
+            user_id=user.id,
+            password_hash=password_hash,
+        )
+        await self.transaction.commit()
+        return updated_user

@@ -1,8 +1,4 @@
 from abc import ABC, abstractmethod
-from types import TracebackType
-from typing import Self
-
-from app.core.interfaceRepositories import IUserRepository
 
 
 class IPasswordHasher(ABC):
@@ -15,22 +11,7 @@ class IPasswordHasher(ABC):
         raise NotImplementedError
 
 
-class IUnitOfWork(ABC):
-    users: IUserRepository
-
-    @abstractmethod
-    async def __aenter__(self) -> Self:
-        raise NotImplementedError
-
-    @abstractmethod
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        raise NotImplementedError
-
+class ITransaction(ABC):
     @abstractmethod
     async def commit(self) -> None:
         raise NotImplementedError

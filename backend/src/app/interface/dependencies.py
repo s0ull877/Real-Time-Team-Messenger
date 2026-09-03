@@ -6,10 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.services import AuthService, EmailActionTokenService, MailService, TokenService, UserService
 from app.core.ports import IPasswordHasher
-from app.infrastructure.database import database, SQLAlchemyUnitOfWork
+from app.infrastructure.database import database, SQLAlchemyTransaction
 from app.infrastructure.repositories import (
     EmailActionTokenRepository,
     BannedRefreshTokenRepository,
+    UserRepository,
 )
 from app.infrastructure.config import get_settings
 from app.infrastructure.security import PasswordHasher
@@ -35,12 +36,12 @@ def get_mail_service(request: Request) -> MailService:
 
 
 def get_user_service(
+    session: SessionDep,
     password_hasher: PasswordHasherDep,
 ) -> UserService:
     return UserService(
-        unit_of_work_factory=lambda: SQLAlchemyUnitOfWork(
-            database.session_factory
-        ),
+        repository=UserRepository(session),
+        transaction=SQLAlchemyTransaction(session),
         password_hasher=password_hasher,
     )
 
