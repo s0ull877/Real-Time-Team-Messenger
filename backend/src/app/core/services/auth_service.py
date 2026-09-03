@@ -18,6 +18,7 @@ class AuthService:
     mail_service: MailService
     token_service: TokenService
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
     
     async def register(self, email: str, username: str, password: str) -> User:
         """
