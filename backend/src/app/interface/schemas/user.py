@@ -1,6 +1,12 @@
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    username: str = Field(min_length=3, max_length=50)
+    password: str = Field(min_length=8, max_length=72)
 
 
 class UserResponse(BaseModel):
@@ -16,7 +22,12 @@ class UserResponse(BaseModel):
     is_verified: bool
 
 
-class UserMember:
+class UserConflictResponse(BaseModel):
+    detail: str
+    field: str
+
+
+class UserMember(BaseModel):
 
     id: UUID
     username: str

@@ -1,60 +1,93 @@
 import jwt
+from typing import Annotated
+
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.services import AuthService, EmailActionTokenService, MailService, TokenService, UserService
-from app.infrastructure.database import database
+from app.core.ports import IPasswordHasher
+from app.infrastructure.database import database, SQLAlchemyTransaction
 from app.infrastructure.repositories import (
-    UserRepository,
     EmailActionTokenRepository,
     BannedRefreshTokenRepository,
+    UserRepository,
 )
 from app.infrastructure.config import get_settings
+from app.infrastructure.security import PasswordHasher
 
 settings = get_settings()
 
+SessionDep = Annotated[AsyncSession, Depends(database.get_db_session)]
 
-async def get_mail_service(request: Request):
+
+def get_password_hasher() -> IPasswordHasher:
+    return PasswordHasher()
+
+
+PasswordHasherDep = Annotated[IPasswordHasher, Depends(get_password_hasher)]
+
+
+def get_mail_service(request: Request) -> MailService:
     kafka_producer = request.app.state.producer
 
-    yield MailService(
+    return MailService(
         broker_producer=kafka_producer,
     )
 
 
-async def get_user_service(session: AsyncSession = Depends(database.get_db_session)):
+def get_user_service(
+    session: SessionDep,
+    password_hasher: PasswordHasherDep,
+) -> UserService:
+    return UserService(
+        repository=UserRepository(session),
+        transaction=SQLAlchemyTransaction(session),
+        password_hasher=password_hasher,
+    )
 
-    user_repository = UserRepository(session=session)
-    yield UserService(repository=user_repository)
 
-
-async def get_email_action_token_service(session: AsyncSession = Depends(database.get_db_session)):
-
+def get_email_action_token_service(
+    session: SessionDep,
+) -> EmailActionTokenService:
     email_action_token_repository = EmailActionTokenRepository(session=session)
-    yield EmailActionTokenService(repository=email_action_token_repository)
+    return EmailActionTokenService(repository=email_action_token_repository)
+
+
+UserServiceDep = Annotated[UserService, Depends(get_user_service)]
+EmailActionTokenServiceDep = Annotated[
+    EmailActionTokenService,
+    Depends(get_email_action_token_service),
+]
+MailServiceDep = Annotated[MailService, Depends(get_mail_service)]
 
 
 async def get_token_service(
-        session: AsyncSession = Depends(database.get_db_session),
-        user_service: UserService = Depends(get_user_service)
-    ):
-
+    session: SessionDep,
+    user_service: UserServiceDep,
+) -> TokenService:
     banned_refresh_token_repository = BannedRefreshTokenRepository(session=session)
-    yield TokenService(user_service=user_service, repository=banned_refresh_token_repository)
+    return TokenService(
+        user_service=user_service,
+        repository=banned_refresh_token_repository,
+    )
+
+
+TokenServiceDep = Annotated[TokenService, Depends(get_token_service)]
 
 
 async def get_auth_service(
-        email_action_token_service: EmailActionTokenService = Depends(get_email_action_token_service),
-        token_service: TokenService = Depends(get_token_service),
-        user_service: UserService = Depends(get_user_service),
-        mail_service: MailService = Depends(get_mail_service),
-    ):
-    
-    yield AuthService(
+    email_action_service: EmailActionTokenServiceDep,
+    token_service: TokenServiceDep,
+    user_service: UserServiceDep,
+    mail_service: MailServiceDep,
+    password_hasher: PasswordHasherDep,
+) -> AuthService:
+    return AuthService(
         user_service=user_service,
-        email_action_token_service=email_action_token_service,
+        email_action_service=email_action_service,
         mail_service=mail_service,
-        token_service=token_service
+        token_service=token_service,
+        password_hasher=password_hasher,
     )
 
 
