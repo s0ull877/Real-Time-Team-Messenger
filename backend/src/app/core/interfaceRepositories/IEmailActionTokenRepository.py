@@ -34,7 +34,7 @@ class IEmailActionTokenRepository(ABC):
 
     
     @abstractmethod
-    async def mark_as_used(self, email_action_id: UUID, used_at: datetime) -> EmailActionToken:
+    async def mark_as_used(self, email_action_token_id: UUID, used_at: datetime) -> EmailActionToken:
         """
         Update email_verification field `used_at`.
         """

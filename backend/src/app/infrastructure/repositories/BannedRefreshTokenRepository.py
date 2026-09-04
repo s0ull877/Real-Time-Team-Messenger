@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 
@@ -23,9 +24,8 @@ class BannedRefreshTokenRepository(IBannedRefreshTokenRepository):
         Convert a BannedRefreshTokenModel instance to a BannedRefreshToken entity.
         """
         return BannedRefreshToken(
-            id=banned_token_model.id,
             jti=banned_token_model.jti,
-            banned_at=banned_token_model.banned_at,
+            banned_at=banned_token_model.banned_at
         )
 
 
@@ -38,6 +38,7 @@ class BannedRefreshTokenRepository(IBannedRefreshTokenRepository):
         """
         banned_token_model = BannedRefreshTokenModel(
             jti=jti,
+            banned_at=datetime.now(timezone.utc)
         )
 
         self.session.add(banned_token_model)
@@ -59,7 +60,7 @@ class BannedRefreshTokenRepository(IBannedRefreshTokenRepository):
         Returns:
             True if the token is banned, otherwise False.
         """
-        stmt = select(BannedRefreshTokenModel.id).where(
+        stmt = select(BannedRefreshTokenModel).where(
             BannedRefreshTokenModel.jti == jti
         )
 

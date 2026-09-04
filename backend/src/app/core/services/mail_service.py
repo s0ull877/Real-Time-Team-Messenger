@@ -27,7 +27,7 @@ class MailService:
         email_message = EmailMessage(
             email=to, 
             subject=f"Verification link for {to}", 
-            body=f"Go to {settings.server_url}verify/{token} for verifying your account"
+            body=f"Go to {settings.server_url}auth/verify-email/{token} for verifying your account"
         )
 
 
@@ -43,7 +43,7 @@ class MailService:
         email_message = EmailMessage(
             email=to, 
             subject=f"Verification link for {to}", 
-            body=f"Go to {settings.server_url}reset-password/{token} for reset your password"
+            body=f"Go to {settings.server_url}auth/reset-password/{token} for reset your password"
         )
 
 
@@ -59,7 +59,7 @@ class MailService:
         email_message = EmailMessage(
             email=to, 
             subject=f"Verification link for {to}", 
-            body=f"Go to {settings.server_url}change-mail/{token} for change your email"
+            body=f"Go to {settings.server_url}auth/change-mail/{token} for change your email"
         )
 
 

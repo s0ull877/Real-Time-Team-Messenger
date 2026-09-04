@@ -38,24 +38,48 @@ class DuplicateEntryError(AppError):
         )
 
 
-class InvalidActionTokenError(Exception):
+class InvalidActionTokenError(AppError):
     """Mail token is invalid, expired, or already used."""
 
-    pass
+    def __init__(self, message: str) -> None:
+        self.message = message
 
-class InvalidVerificationError(Exception):
+        super().__init__(
+            message=message,
+            status_code=409
+        )
+
+class InvalidVerificationError(AppError):
     """Verification token is invalid, expired, or already used."""
 
-    pass
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+        super().__init__(
+            message=message,
+            status_code=403
+        )
 
 
 class InvalidCredentialsError(Exception):
     """Verification token is invalid, expired, or already used."""
 
-    pass
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+        super().__init__(
+            message=message,
+            status_code=401
+        )
 
 
 class InvalidTokenError(Exception):
     """TokenPair is invalid, expired, or already used."""
 
-    pass
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+        super().__init__(
+            message=message,
+            status_code=401
+        )

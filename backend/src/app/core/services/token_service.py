@@ -59,8 +59,8 @@ class TokenService:
 
         return RefreshToken(
             token=encoded_jwt,
-            type="Bearer",
-            expires=timedelta(days=settings.refresh_token_expire_days),
+            token_type="Bearer",
+            expires_at=timedelta(days=settings.refresh_token_expire_days),
             jti=data["jti"],
         )
 
@@ -80,8 +80,8 @@ class TokenService:
 
         return AccessToken(
             token=encoded_jwt,
-            type="Bearer",
-            expires=timedelta(minutes=settings.access_token_expire_minutes),
+            token_type="Bearer",
+            expires_at=timedelta(minutes=settings.access_token_expire_minutes),
         )
 
     async def refresh(self, token: str) -> TokenPair:

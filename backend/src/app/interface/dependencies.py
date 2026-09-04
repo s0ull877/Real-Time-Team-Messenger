@@ -1,4 +1,5 @@
 import jwt
+from uuid import UUID
 from typing import Annotated 
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -126,3 +127,18 @@ class JWTBearer:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="No credentials provided"
             )
+
+JWTBearerDep = Annotated[
+    dict,
+    Depends(JWTBearer()),
+]
+
+async def get_current_user_id(
+    payload: JWTBearerDep,
+) -> UUID:
+    return UUID(payload["sub"])
+
+CurrentUserIdDep = Annotated[
+    UUID,
+    Depends(get_current_user_id),
+]

@@ -1,3 +1,4 @@
+from typing import NoReturn
 from uuid import uuid4, UUID
 from datetime import timedelta
 from dataclasses import dataclass
@@ -49,8 +50,16 @@ class AuthService:
 
         return user
 
+    async def new_verify_email(self, email: str) -> User:
 
-    async def verify_email(self, token) -> User:
+        user = await self.user_service.get_by_email(email=email)
+        _, token = await self.email_action_service.create(user_id=user.id, action=ActionEnum.VERIFY_EMAIL)
+        await self.mail_service.send_verify_token(to=user.email, token=token)
+
+        return user
+
+
+    async def verify_email(self, token: str) -> User:
         """
         Verify a user's email address using an email action token.
 
@@ -69,7 +78,7 @@ class AuthService:
                 "Invalid token action."
             )
 
-        return await self.user_service.mark_as_verified(user_id=email_verification.user_id)
+        return await self.user_service.mark_as_verified_by_id(user_id=email_verification.user_id)
 
 
     async def login(self, email: str, password: str) -> TokenPair:
@@ -189,7 +198,7 @@ class AuthService:
 
 
 
-    async def request_email_change( self, user_id: UUID, new_email: str) -> None:
+    async def request_email_change(self, user_id: UUID, new_email: str) -> None:
         """
         Request an email address change for a user.
 
