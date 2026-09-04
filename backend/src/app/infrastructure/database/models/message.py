@@ -30,7 +30,7 @@ class Message(Base, BaseModelMixin):
         back_populates="messages",
     )
 
-    room: Mapped[list["Room"]] = relationship(
+    room: Mapped["Room"] = relationship(
         back_populates="messages",
     )
 

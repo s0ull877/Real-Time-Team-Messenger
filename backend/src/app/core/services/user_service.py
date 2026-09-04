@@ -21,13 +21,13 @@ class UserService:
         """
         if await self.repository.get_by_email(email=user.email):
             raise DuplicateEntryError(
-                msg="User with this email already exists",
+                message="User with this email already exists",
                 duplicate_field={'email': user.email}
             )
 
         if await self.repository.get_by_username(username=user.username):
             raise DuplicateEntryError(
-                msg="User with this username already exists",
+                message="User with this username already exists",
                 duplicate_field={'username': user.username}
             )
 

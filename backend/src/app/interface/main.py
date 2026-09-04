@@ -8,6 +8,11 @@ from app.infrastructure.broker.kafka import KafkaProducer
 from app.infrastructure.broker.kafka import EmailConsumer
 from app.infrastructure.SMTPclient import SMTPClient
 
+from app.core.exceptions import AppError
+
+from .handlers import app_error_handler
+from .routers import router
+
 app_settings = get_settings()
 
 
@@ -46,5 +51,13 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     lifespan=lifespan,
     title=app_settings.app_name,
-    debug=app_settings.debug
+    debug=app_settings.debug,
 )
+
+
+app.add_exception_handler(
+    AppError,
+    app_error_handler,
+)
+
+app.include_router(router=router, prefix="/api")

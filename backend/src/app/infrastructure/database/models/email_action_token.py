@@ -6,10 +6,7 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 
 from .base import Base
 
-class ActionEnum(enum.Enum):
-    VERIFY_EMAIL = "verify_email"
-    RESET_PASSWORD = "reset_password"
-    CHANGE_EMAIL = "change_email"
+from app.core.entities import ActionEnum
 
 class EmailActionToken(Base):
     __tablename__ = "email_actions_tokens"
@@ -27,7 +24,11 @@ class EmailActionToken(Base):
         unique=True,
     )
     action: Mapped[ActionEnum] = mapped_column(
-        Enum(ActionEnum), nullable=False
+        Enum(
+            ActionEnum,
+            values_callable=lambda enum_class: [item.value for item in enum_class],
+        ),
+        nullable=False,
     )
     used_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),nullable=True

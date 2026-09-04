@@ -1,17 +1,41 @@
-class NotFoundError(Exception): 
+class AppError(Exception):
+    """Base application error."""
+
+    def __init__(
+        self,
+        message: str,
+        status_code: int,
+        details: dict | None = None
+    ):
+        self.message = message
+        self.details = details
+        self.status_code = status_code
+
+        super().__init__(message)
+
+
+class NotFoundError(AppError): 
     """Resource not found."""
 
-    pass
+    def __init__(self, message: str):
+        super().__init__(
+            message=message,
+            status_code=404,
+        )
 
 
-class DuplicateEntryError(Exception):
+class DuplicateEntryError(AppError):
     """Duplicate entry."""
 
-    def __init__(self, msg: str, duplicate_field: dict) -> None:
-        self.msg = msg
-        self.duplicate_field = duplicate_field
+    def __init__(self, message: str, duplicate_field: dict) -> None:
+        self.message = message
+        self.details = {'duplicate_field': duplicate_field}
 
-        super().__init__(msg)
+        super().__init__(
+            message=message,
+            status_code=409,
+            details=self.details
+        )
 
 
 class InvalidActionTokenError(Exception):

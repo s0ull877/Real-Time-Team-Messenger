@@ -25,7 +25,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('token_hash', sa.VARCHAR(length=64), nullable=False),
-    sa.Column('action', sa.Enum('VERIFY_EMAIL', 'RESET_PASSWORD', 'CHANGE_EMAIL', name='actionenum'), nullable=False),
+    sa.Column('action', sa.Enum('verify_email', 'reset_password', 'change_email', name='actionenum'), nullable=False),
     sa.Column('used_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('expires_at', sa.DateTime(timezone=True), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),

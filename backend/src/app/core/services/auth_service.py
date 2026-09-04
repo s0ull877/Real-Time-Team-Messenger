@@ -6,7 +6,11 @@ from passlib.context import CryptContext
 from app.core.entities import User, TokenPair, ActionEnum
 from app.core.exceptions import NotFoundError, InvalidVerificationError, \
     InvalidCredentialsError, InvalidActionTokenError, DuplicateEntryError
-from . import UserService, EmailActionTokenService, MailService, TokenService
+
+from .user_service import UserService
+from .email_action_token_service import EmailActionTokenService
+from .mail_service import MailService
+from .token_service import TokenService
 
 
 
