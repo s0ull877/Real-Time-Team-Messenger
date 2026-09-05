@@ -11,17 +11,18 @@ from app.core.entities import ActionEnum
 class EmailActionToken(Base):
     __tablename__ = "email_actions_tokens"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        primary_key=True, nullable=False, default=uuid.uuid4
-    )
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
+    token_hash: Mapped[str] = mapped_column(
+        VARCHAR(64),
         nullable=False,
+        primary_key=True,
+    )
+    email: Mapped[str] = mapped_column(
+        VARCHAR(255), nullable=False
     )
     token_hash: Mapped[str] = mapped_column(
         VARCHAR(64),
         nullable=False,
-        unique=True,
+        primary_key=True,
     )
     action: Mapped[ActionEnum] = mapped_column(
         Enum(
@@ -35,8 +36,4 @@ class EmailActionToken(Base):
     )
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
-    )
-    
-    user: Mapped["User"] = relationship(
-        back_populates="email_action_tokens",
     )

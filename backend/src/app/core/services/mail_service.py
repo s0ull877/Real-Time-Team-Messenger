@@ -59,7 +59,7 @@ class MailService:
         email_message = EmailMessage(
             email=to, 
             subject=f"Verification link for {to}", 
-            body=f"Go to {settings.server_url}auth/change-mail/{token} for change your email"
+            body=f"Go to {settings.server_url}auth/change-email/{token} for change your email"
         )
 
 

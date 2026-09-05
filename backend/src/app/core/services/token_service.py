@@ -172,7 +172,7 @@ class TokenService:
 
         payload = self._decode_token(token)
 
-        if payload.get("type") != "access":
+        if payload.get("type") != "refresh":
             raise InvalidTokenError("Invalid token type")
 
         jti: str = payload.get("jti")

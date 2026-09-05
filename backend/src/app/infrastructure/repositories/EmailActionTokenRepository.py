@@ -25,8 +25,7 @@ class EmailActionTokenRepository(IEmailActionTokenRepository):
         Convert a UserModel instance to a User entity.
         """
         return EmailActionToken(
-            id=email_token_actionModel.id,
-            user_id=email_token_actionModel.user_id,
+            email=email_token_actionModel.email,
             token_hash=email_token_actionModel.token_hash,
             action=email_token_actionModel.action,
             expires_at=email_token_actionModel.expires_at,
@@ -51,7 +50,7 @@ class EmailActionTokenRepository(IEmailActionTokenRepository):
             IntegrityError: If a database integrity constraint is violated.
         """
         email_token_actionModel = EmailActionTokenModel(
-            user_id=email_token_action.user_id,
+            email=email_token_action.email,
             token_hash=email_token_action.token_hash,
             action=email_token_action.action,
             expires_at=email_token_action.expires_at,
@@ -90,7 +89,7 @@ class EmailActionTokenRepository(IEmailActionTokenRepository):
         return self._to_entity(email_token_actionModel)
 
     
-    async def mark_as_used(self, email_action_token_id: UUID, used_at: datetime) -> EmailActionToken:
+    async def mark_as_used(self, token_hash: str, used_at: datetime) -> EmailActionToken:
         """
         Update used_at field by EmailActionToken id.
 
@@ -100,7 +99,7 @@ class EmailActionTokenRepository(IEmailActionTokenRepository):
         """
         stmt = (
             update(EmailActionTokenModel)
-            .where(EmailActionTokenModel.id == email_action_token_id)
+            .where(EmailActionTokenModel.token_hash == token_hash)
             .values(used_at=used_at)
             .returning(EmailActionTokenModel)
         )
@@ -111,7 +110,7 @@ class EmailActionTokenRepository(IEmailActionTokenRepository):
         if email_token_actionModel is None:
             await self.session.rollback()
             raise NotFoundError(
-                f"Email action token with id:{email_action_token_id} not found"
+                f"Email action token with token:{token_hash} not found"
             )
 
         try:
@@ -123,14 +122,14 @@ class EmailActionTokenRepository(IEmailActionTokenRepository):
         return self._to_entity(email_token_actionModel)
     
 
-    async def delete_by_user_id_and_action(self, user_id: UUID, action: ActionEnum) -> None:
+    async def delete_by_email_and_action(self, email: UUID, action: ActionEnum) -> None:
         """
         Delete all email action token by user_id and action.
 
         Raise NotFoundError if the user does not exist.
         """
         stmt = delete(EmailActionTokenModel)\
-            .where(EmailActionTokenModel.user_id == user_id, EmailActionTokenModel.action == action)
+            .where(EmailActionTokenModel.email == email, EmailActionTokenModel.action == action)
 
         result = await self.session.execute(stmt)
 

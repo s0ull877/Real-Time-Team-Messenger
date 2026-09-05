@@ -61,7 +61,7 @@ class InvalidVerificationError(AppError):
         )
 
 
-class InvalidCredentialsError(Exception):
+class InvalidCredentialsError(AppError):
     """Verification token is invalid, expired, or already used."""
 
     def __init__(self, message: str) -> None:
@@ -73,13 +73,25 @@ class InvalidCredentialsError(Exception):
         )
 
 
-class InvalidTokenError(Exception):
+class InvalidTokenError(AppError):
     """TokenPair is invalid, expired, or already used."""
 
     def __init__(self, message: str) -> None:
         self.message = message
 
         super().__init__(
-            message=message,
+            message=self.message,
             status_code=401
+        )
+
+
+class PasswordNotStrenght(AppError):
+    """TokenPair is invalid, expired, or already used."""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+        super().__init__(
+            message=self.message,
+            status_code=400
         )

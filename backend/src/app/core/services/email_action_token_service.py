@@ -14,16 +14,16 @@ class EmailActionTokenService:
     
     repository: IEmailActionTokenRepository
 
-    async def create(self, user_id: UUID, action: ActionEnum, expires_in: timedelta = timedelta(hours=1)) -> tuple[EmailActionToken, str]:
+    async def create(self, email: str, action: ActionEnum, expires_in: timedelta = timedelta(hours=1)) -> tuple[EmailActionToken, str]:
         """
         Create EmailActionToken. 
         Return tuple (created EmailActionToken entity, raw token string for sending)
         """
-        await self.repository.delete_by_user_id_and_action(user_id=user_id, action=action)
+        await self.repository.delete_by_email_and_action(email=email, action=action)
 
         token = str(uuid4())
         email_action_token = EmailActionToken(
-            user_id=user_id,
+            email=email,
             token_hash=hashlib.sha256(token.encode()).hexdigest(),
             action=action,
             expires_at=datetime.now(timezone.utc) + expires_in
@@ -54,7 +54,7 @@ class EmailActionTokenService:
         if email_action_token.expires_at <= datetime.now(timezone.utc):
             raise InvalidActionTokenError("Verification token has expired.")
 
-        return await self.repository.mark_as_used(email_action_token_id=email_action_token.id, used_at=datetime.now(timezone.utc))
+        return await self.repository.mark_as_used(token_hash=email_action_token.token_hash, used_at=datetime.now(timezone.utc))
 
 
 

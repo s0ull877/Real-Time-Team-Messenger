@@ -15,9 +15,10 @@ class EmailMessage:
     subject: str
     body: str
 
+
 @dataclass(slots=True)
 class EmailActionToken:
-    user_id: UUID
+    email: str
     token_hash: str
     action: ActionEnum
     expires_at: datetime

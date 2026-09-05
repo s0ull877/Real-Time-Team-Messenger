@@ -1,14 +1,12 @@
 import math
 from uuid import UUID
-from typing import Annotated
 
-from pydantic import EmailStr
-from fastapi import APIRouter, status, Body, Response, Request, HTTPException
+from fastapi import APIRouter, Response, Request, HTTPException, status
 
 from app.core.entities import TokenPair
 
-from app.interface.dependencies import AuthServiceDep, CurrentUserIdDep
-from app.interface.schemas import RegisterUser, UserResponse, LoginUser
+from app.interface.dependencies import AuthServiceDep, CurrentUserIdDep, UserServiceDep
+from app.interface.schemas import RegisterUser, UserResponse, LoginUser, PasswordBody, EmailBody
 from app.infrastructure.config import get_settings, settings
 
 settings = get_settings()
@@ -44,13 +42,13 @@ async def verify_email_by_token(
 
 @router.post("/verify-email", status_code=status.HTTP_200_OK)
 async def send_new_verify_link(
-    email: Annotated[EmailStr, Body()],
-    auth_service: AuthServiceDep
+    email_data: EmailBody,
+    auth_service: AuthServiceDep,
 ) -> UserResponse:
     """
     """
 
-    user = await auth_service.new_verify_email(email=email)
+    user = await auth_service.new_verify_email(email=email_data.email)
 
     return UserResponse.model_validate(user)
 
@@ -60,7 +58,7 @@ async def login(
     response: Response,
     user_data: LoginUser,
     auth_service: AuthServiceDep
-):
+) -> None:
     """
     Login a user and return a JWT token.
     """
@@ -90,7 +88,7 @@ async def logout(
     request: Request,
     response: Response,
     auth_service: AuthServiceDep
-):
+) -> None:
     """
     Logout a user
     """
@@ -104,7 +102,7 @@ async def logout(
     if access_token:
         response.delete_cookie(key="access_token")
 
-    return
+    return 
 
 
 @router.get("/refresh", status_code=status.HTTP_200_OK)
@@ -112,7 +110,7 @@ async def refresh(
     request: Request,
     response: Response,
     auth_service: AuthServiceDep,
-):
+) -> None:
     """
     Refresh a user's JWT token.
     """
@@ -145,3 +143,46 @@ async def refresh(
     return
 
 
+@router.post("/request/reset-password", status_code=status.HTTP_200_OK)
+async def request_reset_password(
+    email_data: EmailBody,
+    auth_service: AuthServiceDep
+) -> None:
+
+    await auth_service.request_password_reset(email=email_data.email)
+
+    return
+
+
+@router.post("/reset-password/{token}", status_code=status.HTTP_200_OK)
+async def reset_password(
+    token: UUID,
+    password_data: PasswordBody,
+    auth_service: AuthServiceDep
+) -> UserResponse:
+
+    user = await auth_service.reset_password(token=str(token), new_password=password_data.password)
+
+    return UserResponse.model_validate(user)
+
+
+@router.post("/request/change-email", status_code=status.HTTP_200_OK)
+async def request_change_email(
+    user_id: CurrentUserIdDep,
+    email_data: EmailBody,
+    auth_service: AuthServiceDep
+) -> None:
+
+    await auth_service.request_email_change(user_id=user_id, new_email=email_data.email)
+
+
+@router.get("/change-email/{token}", status_code=status.HTTP_200_OK)
+async def change_email(
+    token: UUID,
+    user_id: CurrentUserIdDep, 
+    auth_service: AuthServiceDep
+) -> UserResponse:
+
+    user = await auth_service.change_email(user_id=user_id, token=str(token))
+
+    return UserResponse.model_validate(user)

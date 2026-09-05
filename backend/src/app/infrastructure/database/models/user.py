@@ -34,7 +34,3 @@ class User(Base, BaseModelMixin):
     messages: Mapped[list["Message"]] = relationship(
         back_populates="author",
     )
-
-    email_action_tokens: Mapped[list["EmailActionToken"]] = relationship(
-        back_populates="user",
-    )

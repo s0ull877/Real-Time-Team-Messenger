@@ -2,10 +2,11 @@ from typing import NoReturn
 from uuid import uuid4, UUID
 from datetime import timedelta
 from dataclasses import dataclass
+from app.core.entities.mail import EmailActionToken
 from passlib.context import CryptContext
 
 from app.core.entities import User, TokenPair, ActionEnum
-from app.core.exceptions import NotFoundError, InvalidVerificationError, \
+from app.core.exceptions import AppError, NotFoundError, InvalidVerificationError, \
     InvalidCredentialsError, InvalidActionTokenError, DuplicateEntryError
 
 from .user_service import UserService
@@ -45,15 +46,21 @@ class AuthService:
                 )
         )
 
-        _, token = await self.email_action_service.create(user_id=user.id, action=ActionEnum.VERIFY_EMAIL)
+        _, token = await self.email_action_service.create(email=user.email, action=ActionEnum.VERIFY_EMAIL)
         await self.mail_service.send_verify_token(to=user.email, token=token)
 
         return user
 
+
     async def new_verify_email(self, email: str) -> User:
 
-        user = await self.user_service.get_by_email(email=email)
-        _, token = await self.email_action_service.create(user_id=user.id, action=ActionEnum.VERIFY_EMAIL)
+        user: User = await self.user_service.get_by_email(email=email)
+        if user.is_verified:
+            raise AppError(
+                message="User already verified!",
+                status_code=400
+            )
+        _, token = await self.email_action_service.create(email=user.email, action=ActionEnum.VERIFY_EMAIL)
         await self.mail_service.send_verify_token(to=user.email, token=token)
 
         return user
@@ -78,7 +85,7 @@ class AuthService:
                 "Invalid token action."
             )
 
-        return await self.user_service.mark_as_verified_by_id(user_id=email_verification.user_id)
+        return await self.user_service.mark_as_verified_by_email(email=email_verification.email)
 
 
     async def login(self, email: str, password: str) -> TokenPair:
@@ -153,7 +160,7 @@ class AuthService:
         )
 
         _, token = await self.email_action_service.create(
-            user_id=user.id,
+            email=user.email,
             action=ActionEnum.RESET_PASSWORD,
             expires_in=timedelta(minutes=15),
         )
@@ -176,7 +183,7 @@ class AuthService:
 
         Update the user's password hash and return the updated user.
         """
-        email_action_token = await self.email_action_service.verify(
+        email_action_token: EmailActionToken = await self.email_action_service.verify(
             token=token
         )
 
@@ -185,14 +192,14 @@ class AuthService:
                 "Invalid token action."
             )
 
+        user = await self.user_service.get_by_email(email=email_action_token.email)
         password_hash = self.pwd_context.hash(
             new_password,
         )
 
-
         #! нужно добавить инвалидацию всех рефреш токенов пользователя по user_id
         return await self.user_service.change_password_hash(
-            user_id=email_action_token.user_id,
+            user_id=user.id,
             password_hash=password_hash,
         )
 
@@ -210,14 +217,16 @@ class AuthService:
         """
         try:
 
-            await self.user_service.get_by_email(new_email)
+            user = await self.user_service.get_by_email(new_email)
+
+            if user.id == user_id:
+                return
 
         except NotFoundError:
 
             _, token = await self.email_action_service.create(
-                user_id=user_id,
+                email=new_email,
                 action=ActionEnum.CHANGE_EMAIL,
-                email=new_email
             )
 
             await self.mail_service.send_change_email_token(
@@ -230,7 +239,7 @@ class AuthService:
             raise DuplicateEntryError(f"Email: {new_email} is busy")
 
 
-    async def change_email(self, token: str) -> User:
+    async def change_email(self, user_id: UUID, token: str) -> User:
         """
         Change a user's email address using a valid email change token.
 
@@ -244,14 +253,14 @@ class AuthService:
 
         Update the user's email address and return the updated user.
         """
-        email_action = await self.email_action_service.verify(
+        email_action: EmailActionToken = await self.email_action_service.verify(
             token=token
         )
         
-        if email_action.action != ActionEnum.VERIFY_EMAIL:
+        if email_action.action != ActionEnum.CHANGE_EMAIL:
             raise InvalidActionTokenError("Invalid token action.")
         
         return await self.user_service.update_email(
-            user_id=email_action.user_id,
+            user_id=user_id,
             email=email_action.email,
         )

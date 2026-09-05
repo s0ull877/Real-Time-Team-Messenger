@@ -34,7 +34,7 @@ class IEmailActionTokenRepository(ABC):
 
     
     @abstractmethod
-    async def mark_as_used(self, email_action_token_id: UUID, used_at: datetime) -> EmailActionToken:
+    async def mark_as_used(self, token_hash: str, used_at: datetime) -> EmailActionToken:
         """
         Update email_verification field `used_at`.
         """
@@ -42,7 +42,7 @@ class IEmailActionTokenRepository(ABC):
     
 
     @abstractmethod
-    async def delete_by_user_id_and_action(self, user_id: UUID, action: ActionEnum) -> None:
+    async def delete_by_email_and_action(self, user_id: UUID, action: ActionEnum) -> None:
         """
         Update email_verification field `used_at`.
         """
