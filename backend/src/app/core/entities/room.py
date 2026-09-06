@@ -1,7 +1,6 @@
-from dataclasses import dataclass
-from datetime import datetime
 from uuid import UUID
-
+from datetime import datetime
+from dataclasses import dataclass
 
 @dataclass(slots=True)
 class Room:
@@ -10,3 +9,18 @@ class Room:
     id: UUID | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class RoomMember:
+    room_id: UUID
+    user_id: UUID
+    joined_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class RoomServiceDTO:
+    id: UUID
+    name: str
+    owner_id: UUID
+    room_members: list[RoomMember]

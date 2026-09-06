@@ -10,14 +10,14 @@ class IRoomMemberRepository(ABC):
     """
 
     @abstractmethod
-    async def add(self, user_id: UUID, room_id: UUID) -> RoomMember:
+    async def add(self, room_member: RoomMember) -> RoomMember:
         """
         Add member in room.
         """
         raise NotImplementedError
     
     @abstractmethod
-    async def remove(self, user_id: UUID, room_id: UUID) -> RoomMember:
+    async def remove(self, room_member: RoomMember) -> None:
         """
         Remove member from room.
         """

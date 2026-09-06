@@ -1,10 +1,14 @@
+from fastapi import APIRouter
+
 from .auth import router as auth_router
 from .user import router as user_router
-from fastapi import APIRouter
+from .rooms import router as room_router
+
 
 rttm_routers = [
     auth_router,
-    user_router
+    user_router,
+    room_router
 ]
 
 rttm_router = APIRouter()
