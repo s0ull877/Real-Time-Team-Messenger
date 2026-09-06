@@ -25,7 +25,7 @@ class UserProfileResponse(BaseModel):
     )
 
     username: str
-    avatar_url: HttpUrl | None
+    avatar_url: str | None
 
 
 class UserProfileRequest(UserProfileResponse):

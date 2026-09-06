@@ -32,7 +32,7 @@ async def update_my_profile(
     user_id: CurrentUserIdDep,
     user_data: UserProfileRequest,
     user_service: UserServiceDep
-) -> UserProfileResponse:
+) -> UserResponse:
     """
     Get user profile information by username
     If username == current user return full information
