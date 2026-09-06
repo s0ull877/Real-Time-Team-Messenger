@@ -24,14 +24,14 @@ class IRoomRepository(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    async def get_by_id(self, room_id: UUID) -> Room:
+    async def get_by_id(self, room_id: UUID) -> Room | None:
         """
         Get a room by id.
         """
         raise NotImplementedError
     
     @abstractmethod
-    async def get_by_owner_id(self, owner_id: UUID) -> list[Room]:
+    async def get_by_owner_id(self, owner_id: UUID) -> list[Room] | list[None]:
         """
         Get owned rooms.
         If no suited rooms return None
@@ -39,7 +39,7 @@ class IRoomRepository(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    async def get_by_member_id(self, memeber_id: UUID) -> list[Room]:
+    async def get_by_member_id(self, memeber_id: UUID) -> list[Room] | list[None]:
         """
         Get rooms of which the user is a member.
         If no suited rooms return None

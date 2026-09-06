@@ -22,7 +22,7 @@ class RoomResponse(BaseModel):
     id: UUID
     name: str
     owner_id: UUID
-    room_members: list[RoomMember]
+    members: list[RoomMember]
 
     model_config = ConfigDict(from_attributes=True)
 

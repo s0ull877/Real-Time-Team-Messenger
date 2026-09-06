@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from app.core.ports import ITransaction
 from app.core.interfaceRepositories import IRoomMemberRepository, IRoomRepository
 
-from app.core.entities import RoomServiceDTO, Room, RoomMember
+from app.core.entities import Room, RoomMember
 
 @dataclass
 class RoomService:
@@ -13,7 +13,7 @@ class RoomService:
     room_member_repository: IRoomMemberRepository
     transaction: ITransaction
 
-    async def create_room(self, owner_id: UUID, room_name: str) -> RoomServiceDTO:
+    async def create_room(self, owner_id: UUID, room_name: str) -> Room:
 
         room = await self.room_repository.create(
             room=Room(
@@ -22,7 +22,7 @@ class RoomService:
             )
         )
 
-        room_member = await self.room_member_repository.add(
+        members = await self.room_member_repository.add(
             room_member=RoomMember(
                 room_id=room.id,
                 user_id=room.owner_id
@@ -35,9 +35,29 @@ class RoomService:
             await self.transaction.rollback()
             raise
 
-        return RoomServiceDTO(
+        return Room(
             id=room.id,
             name=room.name,
             owner_id=room.owner_id,
-            room_members=[room_member]
+            members=[members]
         )
+
+
+    async def get_owned_rooms(self, owner_id: UUID) -> list[Room] | list[None]:
+
+        rooms = await self.room_repository.get_by_owner_id(owner_id=owner_id)
+
+        return rooms
+
+
+    async def get_rooms_by_member_id(self, member_id: UUID) -> list[Room] | list[None]:
+
+        rooms = await self.room_repository.get_by_member_id(member_id=member_id)
+
+        return rooms
+
+
+
+
+    
+

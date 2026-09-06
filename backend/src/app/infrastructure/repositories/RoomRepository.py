@@ -1,11 +1,13 @@
 from uuid import UUID
+
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.entities import Room
 from app.core.interfaceRepositories import IRoomRepository
 
-from app.infrastructure.database.models import Room as RoomModel
-
+from app.infrastructure.database.models import Room as RoomModel, RoomMember as RoomMemberModel
 
 class RoomRepository(IRoomRepository):
 
@@ -18,7 +20,8 @@ class RoomRepository(IRoomRepository):
         return Room(
             id=room_model.id,
             name=room_model.name,
-            owner_id=room_model.owner_id
+            owner_id=room_model.owner_id,
+            members=room_model.members
         )
 
 
@@ -45,23 +48,40 @@ class RoomRepository(IRoomRepository):
         return
 
     
-    async def get_by_owner_id(self, owner_id: UUID) -> list[Room]:
+    async def get_by_owner_id(self, owner_id: UUID) -> list[Room] | list[None]:
         """
-        Get owned rooms.
-        If no suited rooms return None
         """
-        return
+        stmt = select(RoomModel).where(RoomModel.owner_id == owner_id).options(selectinload(RoomModel.members))
+        result = await self.session.execute(stmt)
+        rooms_models = result.scalars().all()
+
+        return [self._to_entity(room) for room in rooms_models]
+
 
     
-    async def get_by_member_id(self, memeber_id: UUID) -> list[Room]:
+    async def get_by_member_id(self, member_id: UUID) -> list[Room] | list[None]:
         """
         Get rooms of which the user is a member.
-        If no suited rooms return None
+        If no suited rooms return empty list
         """
-        return
+        stmt = (
+            select(RoomModel)
+            .options(selectinload(RoomModel.members))
+            .where(
+                RoomModel.members.any(
+                    RoomMemberModel.user_id == member_id
+                )
+            )
+        )
+
+        result = await self.session.execute(stmt)
+        rooms = result.scalars().all()
+
+        return [self._to_entity(room) for room in rooms]
+
 
     
-    async def update(self, room: Room) -> Room:
+    async def update(self, room: Room) -> Room | None:
         """
         Update an existing room.
 

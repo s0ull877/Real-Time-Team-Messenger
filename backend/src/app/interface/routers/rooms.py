@@ -13,8 +13,6 @@ async def create_room(
     room_service: RoomServiceDep
 ) -> RoomResponse:
     """
-    Get user profile information by username
-    If username == current user return full information
     """
     room = await room_service.create_room(
         owner_id = user_id,
@@ -22,3 +20,32 @@ async def create_room(
     )
 
     return RoomResponse.model_validate(room)
+
+
+@router.get("", status_code=status.HTTP_200_OK)
+async def get_rоoms(
+    user_id: CurrentUserIdDep,
+    room_service: RoomServiceDep
+) -> list[RoomResponse] | list[None]:
+    """
+    """
+    rooms = await room_service.get_rooms_by_member_id(
+        member_id = user_id
+    )
+
+    return [RoomResponse.model_validate(room) for room in rooms]
+
+
+@router.get("/owned", status_code=status.HTTP_200_OK)
+async def get_owned_rоoms(
+    user_id: CurrentUserIdDep,
+    room_service: RoomServiceDep
+) -> list[RoomResponse] | list[None]:
+    """
+    """
+    rooms = await room_service.get_owned_rooms(
+        owner_id = user_id
+    )
+
+    return [RoomResponse.model_validate(room) for room in rooms]
+

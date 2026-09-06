@@ -5,7 +5,7 @@ from .auth import (
     TokenPair,
 )
 from .message import Message
-from .room import Room, RoomMember, RoomServiceDTO
+from .room import Room, RoomMember
 from .user import User
 from .mail import EmailMessage, EmailActionToken, ActionEnum
 
