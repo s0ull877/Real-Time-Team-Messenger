@@ -5,7 +5,7 @@ from fastapi import APIRouter, Response, Request, HTTPException, status
 
 from app.core.entities import TokenPair
 
-from app.interface.dependencies import AuthServiceDep, CurrentUserIdDep, UserServiceDep
+from app.interface.dependencies import AuthServiceDep, CurrentUserIdDep
 from app.interface.schemas import RegisterUser, UserResponse, LoginUser, PasswordBody, EmailBody
 from app.infrastructure.config import get_settings, settings
 

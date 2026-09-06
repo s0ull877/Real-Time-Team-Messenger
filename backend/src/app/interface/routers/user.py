@@ -1,13 +1,10 @@
-from fastapi import APIRouter, Response, Request, HTTPException, status
+from fastapi import APIRouter, status
 
 from app.interface.dependencies import CurrentUserIdDep, UserServiceDep
 from app.interface.schemas import UserResponse, UserProfileRequest, UserProfileResponse
-from app.infrastructure.config import get_settings, settings
 
-settings = get_settings()
 
-router = APIRouter(prefix="/user", tags=["user"])
-
+router = APIRouter(prefix="/users", tags=["user"])
 
 @router.get("/{username}", status_code=status.HTTP_200_OK)
 async def get_user_info(
