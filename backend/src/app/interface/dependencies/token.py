@@ -5,23 +5,27 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Request, status
 
 from app.infrastructure.config import get_settings
-from app.core.services import TokenService
-from app.infrastructure.repositories import BannedRefreshTokenRepository
+from app.core.services import TokenService, UserService
+from app.infrastructure.repositories import BannedRefreshTokenRepository, UserRepository
 
-from . import UserServiceDep, SessionDep
+from . import SessionDep, SQLAlchemyTransaction
 
 settings = get_settings()
 
 
 async def get_token_service(
     session: SessionDep,
-    user_service: UserServiceDep,
 ):
+    
     repository = BannedRefreshTokenRepository(session=session)
+    user_service = UserService(
+        repository=UserRepository(session=session)
+    )
 
     yield TokenService(
         user_service=user_service,
         repository=repository,
+        transaction=SQLAlchemyTransaction(session=session)
     )
 
 

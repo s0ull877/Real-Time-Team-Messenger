@@ -43,13 +43,9 @@ class BannedRefreshTokenRepository(IBannedRefreshTokenRepository):
 
         self.session.add(banned_token_model)
 
-        try:
-            await self.session.commit()
-            await self.session.refresh(banned_token_model)
-        except IntegrityError:
-            await self.session.rollback()
-            raise
-
+        await self.session.flush()
+        await self.session.refresh(banned_token_model)
+      
         return self._to_entity(banned_token_model)
 
 

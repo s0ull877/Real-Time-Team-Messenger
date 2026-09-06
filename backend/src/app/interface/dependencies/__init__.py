@@ -1,4 +1,4 @@
-from .session import SessionDep
+from .session import SessionDep, SQLAlchemyTransaction
 from .mail import MailServiceDep, EmailActionTokenServiceDep
 from .user import UserServiceDep
 from .token import TokenServiceDep, CurrentUserIdDep, JWTBearerDep

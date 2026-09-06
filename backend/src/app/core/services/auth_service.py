@@ -6,6 +6,7 @@ from app.core.entities.mail import EmailActionToken
 from passlib.context import CryptContext
 
 from app.core.entities import User, TokenPair, ActionEnum
+from app.core.ports import ITransaction
 from app.core.exceptions import AppError, NotFoundError, InvalidVerificationError, \
     InvalidCredentialsError, InvalidActionTokenError, DuplicateEntryError
 
@@ -23,6 +24,7 @@ class AuthService:
     email_action_service: EmailActionTokenService
     mail_service: MailService
     token_service: TokenService
+    transaction: ITransaction
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     
@@ -49,6 +51,12 @@ class AuthService:
         _, token = await self.email_action_service.create(email=user.email, action=ActionEnum.VERIFY_EMAIL)
         await self.mail_service.send_verify_token(to=user.email, token=token)
 
+        try:
+            await self.transaction.commit()
+        except Exception:
+            await self.transaction.rollback()
+            raise
+
         return user
 
 
@@ -62,6 +70,12 @@ class AuthService:
             )
         _, token = await self.email_action_service.create(email=user.email, action=ActionEnum.VERIFY_EMAIL)
         await self.mail_service.send_verify_token(to=user.email, token=token)
+
+        try:
+            await self.transaction.commit()
+        except Exception:
+            await self.transaction.rollback()
+            raise
 
         return user
 
@@ -85,7 +99,15 @@ class AuthService:
                 "Invalid token action."
             )
 
-        return await self.user_service.mark_as_verified_by_email(email=email_verification.email)
+        user = await self.user_service.mark_as_verified_by_email(email=email_verification.email)
+
+        try:
+            await self.transaction.commit()
+        except Exception:
+            await self.transaction.rollback()
+            raise
+
+        return user
 
 
     async def login(self, email: str, password: str) -> TokenPair:
@@ -132,7 +154,15 @@ class AuthService:
 
         The refresh token becomes unavailable for further use.
         """
-        return await self.token_service.ban_refresh_token(token=token)
+        banned_refresh_token =  await self.token_service.ban_refresh_token(token=token)
+
+        try:
+            await self.transaction.commit()
+        except Exception:
+            await self.transaction.rollback()
+            raise
+
+        return banned_refresh_token
 
 
     async def refresh(self, token: str) -> TokenPair:
@@ -144,7 +174,15 @@ class AuthService:
 
         Return a new access and refresh token pair.
         """
-        return await self.token_service.refresh(token=token)
+        token_pair =  await self.token_service.refresh(token=token)
+
+        try:
+            await self.transaction.commit()
+        except Exception:
+            await self.transaction.rollback()
+            raise
+
+        return token_pair
 
 
     async def request_password_reset(self, email: str) -> None:
@@ -169,6 +207,12 @@ class AuthService:
             to=user.email,
             token=token,
         )
+
+        try:
+            await self.transaction.commit()
+        except Exception:
+            await self.transaction.rollback()
+            raise
 
 
     async def reset_password(self, token: str, new_password: str) -> User:
@@ -198,10 +242,18 @@ class AuthService:
         )
 
         #! нужно добавить инвалидацию всех рефреш токенов пользователя по user_id
-        return await self.user_service.change_password_hash(
+        user =  await self.user_service.change_password_hash(
             user_id=user.id,
             password_hash=password_hash,
         )
+
+        try:
+            await self.transaction.commit()
+        except Exception:
+            await self.transaction.rollback()
+            raise
+
+        return user
 
 
 
@@ -233,10 +285,16 @@ class AuthService:
                 to=new_email,
                 token=token
             )
+
+            try:
+                await self.transaction.commit()
+            except Exception:
+                await self.transaction.rollback()
+                raise
             
         else:
 
-            raise DuplicateEntryError(f"Email: {new_email} is busy")
+            raise DuplicateEntryError(message=f"Email: {new_email} is busy", duplicate_field={'email': new_email})
 
 
     async def change_email(self, user_id: UUID, token: str) -> User:
@@ -260,7 +318,15 @@ class AuthService:
         if email_action.action != ActionEnum.CHANGE_EMAIL:
             raise InvalidActionTokenError("Invalid token action.")
         
-        return await self.user_service.update_email(
+        user=  await self.user_service.update_email(
             user_id=user_id,
             email=email_action.email,
         )
+
+        try:
+            await self.transaction.commit()
+        except Exception:
+            await self.transaction.rollback()
+            raise
+
+        return user

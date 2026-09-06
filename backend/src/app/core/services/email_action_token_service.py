@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
+from app.core.ports import ITransaction
 from app.core.entities import EmailActionToken, ActionEnum
 from app.core.interfaceRepositories import IEmailActionTokenRepository
 from app.core.exceptions import InvalidActionTokenError
@@ -13,6 +14,7 @@ from app.core.exceptions import InvalidActionTokenError
 class EmailActionTokenService:
     
     repository: IEmailActionTokenRepository
+    transaction: ITransaction | None = None
 
     async def create(self, email: str, action: ActionEnum, expires_in: timedelta = timedelta(hours=1)) -> tuple[EmailActionToken, str]:
         """
@@ -30,6 +32,14 @@ class EmailActionTokenService:
         )
 
         created = await self.repository.create(email_action_token)
+
+        if self.transaction:
+            try:
+                await self.transaction.commit()
+            except Exception:
+                await self.transaction.rollback()
+                raise
+
         return (created, token)
 
 
@@ -54,7 +64,16 @@ class EmailActionTokenService:
         if email_action_token.expires_at <= datetime.now(timezone.utc):
             raise InvalidActionTokenError("Verification token has expired.")
 
-        return await self.repository.mark_as_used(token_hash=email_action_token.token_hash, used_at=datetime.now(timezone.utc))
+        email_action_token =  await self.repository.mark_as_used(token_hash=email_action_token.token_hash, used_at=datetime.now(timezone.utc))
+
+        if self.transaction:
+            try:
+                await self.transaction.commit()
+            except Exception:
+                await self.transaction.rollback()
+                raise
+
+        return email_action_token
 
 
 

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from app.core.entities import User
+from app.core.ports import ITransaction
 from app.core.interfaceRepositories import IUserRepository
 from app.core.exceptions import DuplicateEntryError, NotFoundError
 
@@ -11,6 +12,7 @@ from app.core.exceptions import DuplicateEntryError, NotFoundError
 class UserService:
     
     repository: IUserRepository
+    transaction: ITransaction | None = None
 
     async def create(self, user: User) -> User:
         """
@@ -31,7 +33,16 @@ class UserService:
                 duplicate_field={'username': user.username}
             )
 
-        return await self.repository.create(user)
+        user = await self.repository.create(user)
+
+        if self.transaction:
+            try:
+                await self.transaction.commit()
+            except Exception:
+                await self.transaction.rollback()
+                raise
+
+        return user
 
 
     async def get_by_id(self, user_id: UUID) -> User:
@@ -89,13 +100,14 @@ class UserService:
         is_changed = False
 
         if user.username != username:
+
             existing_user = await self.repository.get_by_username(username=username)
 
             if existing_user:
 
                 # если на фронте не позволять вбивать тот же самый юзернейм то он нормально обработает ошибку
                 raise DuplicateEntryError(
-                    msg=f"Username: {username} is busy",
+                    message=f"Username: {username} is busy",
                     duplicate_field={"username": username},
                 )
 
@@ -110,7 +122,15 @@ class UserService:
         if not is_changed: 
             return user
 
-        return await self.repository.update(user=user)
+        user= await self.repository.update(user=user)
+        if self.transaction:
+            try:
+                await self.transaction.commit()
+            except Exception:
+                await self.transaction.rollback()
+                raise
+
+        return user
 
 
     async def update_email(self, user_id: UUID,  email: str) -> User:
@@ -125,13 +145,21 @@ class UserService:
 
         if existing_user and existing_user.id != user.id:
             raise DuplicateEntryError(
-                msg=f"Email: {email} is busy",
+                message=f"Email: {email} is busy",
                 duplicate_field={'email': email}
             )
 
         user.email = email
 
-        return await self.repository.update(user=user)
+        user= await self.repository.update(user=user)
+        if self.transaction:
+            try:
+                await self.transaction.commit()
+            except Exception:
+                await self.transaction.rollback()
+                raise
+
+        return user
 
 
     async def mark_as_verified_by_email(self, email: str) -> User:
@@ -142,7 +170,15 @@ class UserService:
         user = await self.get_by_email(email=email)
         user.is_verified = True
 
-        return await self.repository.update(user=user)
+        user= await self.repository.update(user=user)
+        if self.transaction:
+            try:
+                await self.transaction.commit()
+            except Exception:
+                await self.transaction.rollback()
+                raise
+
+        return user
 
 
     async def delete(self, user_id: UUID) -> None:
@@ -151,9 +187,26 @@ class UserService:
         """
         user = await self.get_by_id(user_id=user_id)
         await self.repository.delete(user_id=user.id)
+        if self.transaction:
+            try:
+                await self.transaction.commit()
+            except Exception:
+                await self.transaction.rollback()
+                raise
+
+        return
 
 
     async def change_password_hash(self, user_id: UUID, password_hash: str) -> User:
 
         user = await self.get_by_id(user_id=user_id)
-        return await self.repository.update_password_by_id(user_id=user.id, password_hash=password_hash)
+        updated_user= await self.repository.update_password_by_id(user_id=user.id, password_hash=password_hash)
+        
+        if self.transaction:
+            try:
+                await self.transaction.commit()
+            except Exception:
+                await self.transaction.rollback()
+                raise
+
+        return updated_user

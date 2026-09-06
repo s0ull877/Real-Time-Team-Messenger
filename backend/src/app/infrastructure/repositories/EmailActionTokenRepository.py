@@ -59,12 +59,8 @@ class EmailActionTokenRepository(IEmailActionTokenRepository):
 
         self.session.add(email_token_actionModel)
 
-        try:
-            await self.session.commit()
-            await self.session.refresh(email_token_actionModel)
-        except IntegrityError:
-            await self.session.rollback()
-            raise
+        await self.session.flush()
+        await self.session.refresh(email_token_actionModel)
 
         return self._to_entity(email_token_actionModel)
     
@@ -113,11 +109,7 @@ class EmailActionTokenRepository(IEmailActionTokenRepository):
                 f"Email action token with token:{token_hash} not found"
             )
 
-        try:
-            await self.session.commit()
-        except IntegrityError:
-            await self.session.rollback()
-            raise
+        await self.session.flush()
 
         return self._to_entity(email_token_actionModel)
     
@@ -131,11 +123,7 @@ class EmailActionTokenRepository(IEmailActionTokenRepository):
         stmt = delete(EmailActionTokenModel)\
             .where(EmailActionTokenModel.email == email, EmailActionTokenModel.action == action)
 
-        result = await self.session.execute(stmt)
+        await self.session.execute(stmt)
 
-        try:
-            await self.session.commit()
-        except IntegrityError:
-            await self.session.rollback()
-            raise
+        await self.session.flush()
     

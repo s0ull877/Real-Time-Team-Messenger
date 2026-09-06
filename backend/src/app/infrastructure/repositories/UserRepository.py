@@ -61,12 +61,8 @@ class UserRepository(IUserRepository):
 
         self.session.add(user_model)
 
-        try:
-            await self.session.commit()
-            await self.session.refresh(user_model)
-        except IntegrityError:
-            await self.session.rollback()
-            raise
+        await self.session.flush()
+        await self.session.refresh(user_model)
 
         return self._to_entity(user_model)
     
@@ -161,12 +157,8 @@ class UserRepository(IUserRepository):
         user_model.is_verified = user.is_verified
         user_model.avatar_url = user.avatar_url
 
-        try:
-            await self.session.commit()
-            await self.session.refresh(user_model)
-        except IntegrityError:
-            await self.session.rollback()
-            raise
+        await self.session.flush()
+        await self.session.refresh(user_model)
 
         return self._to_entity(user_model)
 
@@ -195,11 +187,7 @@ class UserRepository(IUserRepository):
                 f"User with id:{user_id} not found"
             )
 
-        try:
-            await self.session.commit()
-        except IntegrityError:
-            await self.session.rollback()
-            raise
+        await self.session.flush()
 
         return self._to_entity(user_model)
 
@@ -219,8 +207,6 @@ class UserRepository(IUserRepository):
                 f"User with id:{user_id} not found"
             )
 
-        try:
-            await self.session.commit()
-        except IntegrityError:
-            await self.session.rollback()
-            raise
+        await self.session.flush()
+
+        return

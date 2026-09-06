@@ -3,13 +3,13 @@ from uuid import UUID, uuid4
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 
-from app.infrastructure.config import get_settings
+from app.core.ports import ITransaction
 from app.core.exceptions import NotFoundError, InvalidTokenError
 from app.core.entities import RefreshToken, AccessToken, TokenPair, User, BannedRefreshToken
 from app.core.interfaceRepositories import IBannedRefreshTokenRepository
-
 from . import UserService
 
+from app.infrastructure.config import get_settings
 
 settings = get_settings()
 
@@ -19,6 +19,7 @@ class TokenService:
 
     user_service: UserService
     repository: IBannedRefreshTokenRepository
+    transaction: ITransaction | None = None
 
 
     def _decode_token(self, token: str) -> dict:
@@ -108,13 +109,20 @@ class TokenService:
             raise InvalidTokenError("Refresh token is banned")
         
         await self.repository.ban(jti=jti)
-        
+
         access_token = self.create_access_token(
             {"sub": str(user.id)}
         )
         refresh_token = self.create_refresh_token(
             {"sub": str(user.id), "jti": str(uuid4())}
         )
+
+        if self.transaction:
+            try:
+                await self.transaction.commit()
+            except Exception:
+                await self.transaction.rollback()
+                raise
         
         return TokenPair(
             access_token=access_token,
@@ -177,4 +185,13 @@ class TokenService:
 
         jti: str = payload.get("jti")
 
-        return await self.repository.ban(jti=jti)
+        banned_refresh_token =  await self.repository.ban(jti=jti)
+
+        if self.transaction:
+            try:
+                await self.transaction.commit()
+            except Exception:
+                await self.transaction.rollback()
+                raise
+
+        return banned_refresh_token

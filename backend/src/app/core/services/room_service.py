@@ -28,7 +28,12 @@ class RoomService:
                 user_id=room.owner_id
             )
         )
-        await self.transaction.commit()
+        
+        try:
+            await self.transaction.commit()
+        except Exception:
+            await self.transaction.rollback()
+            raise
 
         return RoomServiceDTO(
             id=room.id,
