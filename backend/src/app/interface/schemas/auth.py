@@ -23,7 +23,7 @@ class PasswordStrengthMixin:
 class RegisterUser(PasswordStrengthMixin, BaseModel):
 
     email: EmailStr
-    username: str = Field(min_length=8)
+    username: str = Field(min_length=8, max_length=50)
     password: str = Field(min_length=8)
 
 

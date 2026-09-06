@@ -95,3 +95,15 @@ class PasswordNotStrenght(AppError):
             message=self.message,
             status_code=400
         )
+
+
+class InvalidURLSchema(AppError):
+    """TokenPair is invalid, expired, or already used."""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+        super().__init__(
+            message=self.message,
+            status_code=400
+        )

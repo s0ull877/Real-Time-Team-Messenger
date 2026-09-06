@@ -1,11 +1,13 @@
 from .auth import LoginUser, RegisterUser, PasswordBody, EmailBody
-from .user import UserResponse
+from .user import UserResponse, UserProfileResponse, UserProfileRequest
 
 
 __all__ = [
     "LoginUser",
     "RegisterUser",
     "PasswordBody",
-    "UserResponse",
     "EmailBody",
+    "UserProfileResponse",
+    "UserProfileRequest",
+    "UserProfile",
 ]

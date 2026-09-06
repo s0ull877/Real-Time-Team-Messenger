@@ -60,10 +60,23 @@ class UserService:
         return user
 
 
+    async def get_by_username(self, username: str) -> User:
+        """
+        Get a user by id.
+        If user does not exist raise NotFoundError.
+        """
+        
+        user = await self.repository.get_by_username(username=username)
+        if not user:
+            raise NotFoundError(f"User with this username:{username} does not exist")
+
+        return user
+
+
     async def update_profile_data(
             self, 
             user_id: UUID,
-            username: str | None = None, 
+            username: str, 
             avatar_url: str | None = None
         ) -> User:
 
@@ -73,11 +86,12 @@ class UserService:
         """
 
         user = await self.get_by_id(user_id=user_id)
+        is_changed = False
 
-        if username is not None:
+        if user.username != username:
             existing_user = await self.repository.get_by_username(username=username)
 
-            if existing_user and existing_user.id != user.id:
+            if existing_user:
 
                 # если на фронте не позволять вбивать тот же самый юзернейм то он нормально обработает ошибку
                 raise DuplicateEntryError(
@@ -86,9 +100,15 @@ class UserService:
                 )
 
             user.username = username
+            is_changed = True
 
-        if avatar_url is not None:
+        if user.avatar_url != avatar_url:
+            
             user.avatar_url = avatar_url
+            is_changed = True
+
+        if not is_changed: 
+            return user
 
         return await self.repository.update(user=user)
 

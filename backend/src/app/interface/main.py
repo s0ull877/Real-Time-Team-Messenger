@@ -11,7 +11,7 @@ from app.infrastructure.SMTPclient import SMTPClient
 from app.core.exceptions import AppError
 
 from .handlers import app_error_handler
-from .routers import router
+from .routers import rttm_router
 
 app_settings = get_settings()
 
@@ -60,4 +60,4 @@ app.add_exception_handler(
     app_error_handler,
 )
 
-app.include_router(router=router, prefix="/api")
+app.include_router(router=rttm_router, prefix="/rttm")
