@@ -11,11 +11,7 @@ from app.core.entities import ActionEnum
 class EmailActionToken(Base):
     __tablename__ = "email_actions_tokens"
 
-    token_hash: Mapped[str] = mapped_column(
-        VARCHAR(64),
-        nullable=False,
-        primary_key=True,
-    )
+
     email: Mapped[str] = mapped_column(
         VARCHAR(255), nullable=False
     )

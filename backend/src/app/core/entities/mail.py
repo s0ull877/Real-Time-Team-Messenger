@@ -7,6 +7,8 @@ class ActionEnum(enum.Enum):
     VERIFY_EMAIL = "verify_email"
     RESET_PASSWORD = "reset_password"
     CHANGE_EMAIL = "change_email"
+    ROOM_INVITATION = "room_invitation"
+
 
 
 @dataclass(slots=True)
