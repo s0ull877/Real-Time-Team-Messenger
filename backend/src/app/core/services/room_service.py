@@ -40,18 +40,17 @@ class RoomService:
             id=room.id,
             name=room.name,
             owner_id=room.owner_id,
-            members=[members]
         )
 
 
-    async def get_owned_rooms(self, owner_id: UUID) -> list[Room] | list[None]:
+    async def get_owned_rooms(self, owner_id: UUID) -> list[Room]:
 
         rooms = await self.room_repository.get_by_owner_id(owner_id=owner_id)
 
         return rooms
 
 
-    async def get_rooms_by_member_id(self, member_id: UUID) -> list[Room] | list[None]:
+    async def get_rooms_by_member_id(self, member_id: UUID) -> list[Room]:
 
         rooms = await self.room_repository.get_by_member_id(member_id=member_id)
 
@@ -93,7 +92,7 @@ class RoomService:
 
     async def delete_room(self, room_id: UUID, user_id: UUID) -> None:
 
-        room = await self.room_repository.get_by_id(room_id=room_id,)
+        room = await self.room_repository.get_by_id(room_id=room_id)
 
         if not room:
             raise NotFoundError(
@@ -114,5 +113,28 @@ class RoomService:
             raise
 
         return
+
+
+    async def get_room_members(self, user_id: UUID, room_id: UUID) -> list[RoomMember]:
+
+        room = await self.room_repository.get_by_id(room_id=room_id)
+
+        if not room:
+            raise NotFoundError(
+                f"Room with id:{room_id} does not exist"
+            )
+
+        if not await self.room_member_repository.is_member(user_id=user_id, room_id=room_id):
+            raise PermissionError(
+                "User is not the room member"
+            )
+
+        return await self.room_member_repository.get_room_members(room_id=room_id)
+
+    
+
+
+
+
     
 

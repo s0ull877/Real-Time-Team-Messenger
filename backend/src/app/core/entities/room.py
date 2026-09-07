@@ -13,7 +13,6 @@ class RoomMember:
 class Room:
     name: str
     owner_id: UUID
-    members: list[RoomMember] | list[None]
     id: UUID | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None

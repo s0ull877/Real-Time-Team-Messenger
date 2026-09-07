@@ -22,7 +22,6 @@ class RoomRepository(IRoomRepository):
             id=room_model.id,
             name=room_model.name,
             owner_id=room_model.owner_id,
-            members=room_model.members
         )
 
 
@@ -46,7 +45,7 @@ class RoomRepository(IRoomRepository):
         """
         Get a room by id.
         """
-        stmt = select(RoomModel).where(RoomModel.id == room_id).options(selectinload(RoomModel.members))
+        stmt = select(RoomModel).where(RoomModel.id == room_id)
 
         result = await self.session.execute(stmt)
 
@@ -61,7 +60,7 @@ class RoomRepository(IRoomRepository):
     async def get_by_owner_id(self, owner_id: UUID) -> list[Room] | list[None]:
         """
         """
-        stmt = select(RoomModel).where(RoomModel.owner_id == owner_id).options(selectinload(RoomModel.members))
+        stmt = select(RoomModel).where(RoomModel.owner_id == owner_id)
         result = await self.session.execute(stmt)
         rooms_models = result.scalars().all()
 
@@ -97,7 +96,6 @@ class RoomRepository(IRoomRepository):
                 .where(RoomModel.id == room_id)
                 .values(name=name)
                 .returning(RoomModel)
-                .options(selectinload(RoomModel.members))
             )
         result = await self.session.execute(stmt)
         room = result.scalar_one()
@@ -123,6 +121,8 @@ class RoomRepository(IRoomRepository):
         await self.session.flush()
 
         return
+
+
 
     
 

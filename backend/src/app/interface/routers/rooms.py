@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, status, Response
 
 from app.interface.dependencies import CurrentUserIdDep, RoomServiceDep
-from app.interface.schemas import CreateRoom, RoomResponse, UpdateRoom
+from app.interface.schemas import CreateRoom, RoomResponse, UpdateRoom, RoomMemberResponse
 
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
@@ -81,4 +81,21 @@ async def delete_room(
         user_id=user_id,
         room_id=room_id
     )
+
+
+
+@router.get("/{room_id}/members", status_code=status.HTTP_200_OK)
+async def get_room_members(
+    user_id: CurrentUserIdDep,
+    room_id: UUID,
+    room_service: RoomServiceDep
+) -> list[RoomMemberResponse]:
+    """
+    """
+    room_members = await room_service.get_room_members(
+        user_id=user_id,
+        room_id=room_id
+    )
+
+    return [RoomMemberResponse.model_validate(room_member) for room_member in room_members]
 

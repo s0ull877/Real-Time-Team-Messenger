@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.entities import RoomMember
@@ -52,8 +52,14 @@ class RoomMemberRepository(IRoomMemberRepository):
         """
         return whether the user is a member of the group
         """
-        return
-    
+        return await self.session.scalar(
+            select(
+                exists().where(
+                    RoomMemberModel.user_id == user_id, 
+                    RoomMemberModel.room_id == room_id
+                )
+            )
+        )
 
     async def get_room_members(self, room_id: UUID) -> list[RoomMember]:
         """
@@ -65,7 +71,7 @@ class RoomMemberRepository(IRoomMemberRepository):
 
         entity_list = []
         
-        if room_members_models :
+        if room_members_models:
 
             for room_member_model in room_members_models:
                 entity_list.append(self._to_entity(room_member_model))
