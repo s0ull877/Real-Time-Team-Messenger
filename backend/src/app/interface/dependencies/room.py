@@ -4,7 +4,7 @@ from fastapi import Depends
 
 from app.core.services import RoomService
 from app.infrastructure.repositories import RoomRepository, RoomMemberRepository
-from app.infrastructure.database.transaction import SQLAlchemyTransaction
+from . import SQLAlchemyTransaction
 
 from . import SessionDep
 

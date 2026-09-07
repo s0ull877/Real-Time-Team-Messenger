@@ -1,10 +1,12 @@
-from fastapi import APIRouter, status
+from uuid import UUID
+
+from fastapi import APIRouter, status, Response
 
 from app.interface.dependencies import CurrentUserIdDep, RoomServiceDep
-from app.interface.schemas import CreateRoom, RoomResponse
+from app.interface.schemas import CreateRoom, RoomResponse, UpdateRoom
 
 
-router = APIRouter(prefix="/rooms", tags=["user"])
+router = APIRouter(prefix="/rooms", tags=["rooms"])
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_room(
@@ -48,4 +50,35 @@ async def get_owned_rоoms(
     )
 
     return [RoomResponse.model_validate(room) for room in rooms]
+
+
+@router.post("/{room_id}", status_code=status.HTTP_200_OK)
+async def update_room(
+    user_id: CurrentUserIdDep,
+    room_id: UUID,
+    room_data: UpdateRoom,
+    room_service: RoomServiceDep
+) -> RoomResponse:
+    """
+    """
+    updated_room = await room_service.update_room_name(
+        user_id=user_id,
+        room_id=room_id, 
+        name=room_data.name
+    )
+    return RoomResponse.model_validate(updated_room)
+
+
+@router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_room(
+    user_id: CurrentUserIdDep,
+    room_id: UUID,
+    room_service: RoomServiceDep
+) -> Response:
+    """
+    """
+    await room_service.delete_room(
+        user_id=user_id,
+        room_id=room_id
+    )
 

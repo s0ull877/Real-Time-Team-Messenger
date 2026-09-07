@@ -1,10 +1,11 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update, delete
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.entities import Room
+from app.core.exceptions import NotFoundError
 from app.core.interfaceRepositories import IRoomRepository
 
 from app.infrastructure.database.models import Room as RoomModel, RoomMember as RoomMemberModel
@@ -45,9 +46,18 @@ class RoomRepository(IRoomRepository):
         """
         Get a room by id.
         """
-        return
+        stmt = select(RoomModel).where(RoomModel.id == room_id).options(selectinload(RoomModel.members))
 
-    
+        result = await self.session.execute(stmt)
+
+        room_model = result.scalar_one_or_none()
+
+        if room_model is None:
+            return None
+
+        return self._to_entity(room_model)
+
+
     async def get_by_owner_id(self, owner_id: UUID) -> list[Room] | list[None]:
         """
         """
@@ -80,25 +90,38 @@ class RoomRepository(IRoomRepository):
         return [self._to_entity(room) for room in rooms]
 
 
-    
-    async def update(self, room: Room) -> Room | None:
-        """
-        Update an existing room.
+    async def update_name_by_id(self, room_id: UUID, name: str) -> Room | None:
 
-        class Room:
-            id: UUID | None = None
-            name: str
-            owner_id: UUID
-            created_at: datetime
-            updated_at: datetime
-        """
-        return
+        stmt = (
+                update(RoomModel)
+                .where(RoomModel.id == room_id)
+                .values(name=name)
+                .returning(RoomModel)
+                .options(selectinload(RoomModel.members))
+            )
+        result = await self.session.execute(stmt)
+        room = result.scalar_one()
+
+        await self.session.flush()
+
+        return self._to_entity(room)
 
     
     async def delete(self, room_id: UUID) -> None:
         """
         Delete room.
         """
+        stmt = delete(RoomModel).where(RoomModel.id == room_id)
+
+        result = await self.session.execute(stmt)
+
+        if result.rowcount == 0:
+            raise NotFoundError(
+                f"Room with id:{room_id} not found"
+            )
+
+        await self.session.flush()
+
         return
 
     

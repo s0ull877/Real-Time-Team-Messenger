@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict
 
 class RoomMember(BaseModel):
 
-    room_id: UUID
     user_id: UUID
     joined_at: datetime
 
@@ -15,6 +14,10 @@ class RoomMember(BaseModel):
 class CreateRoom(BaseModel):
 
     name: str
+
+
+class UpdateRoom(CreateRoom):
+    ...
 
 
 class RoomResponse(BaseModel):

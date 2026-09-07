@@ -47,16 +47,9 @@ class IRoomRepository(ABC):
         raise NotImplementedError
     
     @abstractmethod
-    async def update(self, room: Room) -> Room:
+    async def update_name_by_id(self, room_id: UUID, name: str) -> Room:
         """
-        Update an existing room.
-
-        class Room:
-            id: UUID | None = None
-            name: str
-            owner_id: UUID
-            created_at: datetime
-            updated_at: datetime
+        Update room name.
         """
         raise NotImplementedError
     

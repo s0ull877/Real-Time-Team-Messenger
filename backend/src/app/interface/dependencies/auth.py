@@ -1,13 +1,12 @@
 from typing import Annotated 
-from app.infrastructure.database.transaction import SQLAlchemyTransaction
 from fastapi import Depends
 
-from app.core.services import AuthService, UserService, TokenService, EmailActionTokenService, token_service
+from app.core.services import AuthService, UserService, TokenService, EmailActionTokenService
 
 from app.infrastructure.repositories import UserRepository, EmailActionTokenRepository, BannedRefreshTokenRepository  
 from app.infrastructure.config import get_settings
 
-from . import SessionDep, MailServiceDep
+from . import SessionDep, MailServiceDep, SQLAlchemyTransaction
 
 settings = get_settings()
 

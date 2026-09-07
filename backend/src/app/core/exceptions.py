@@ -5,7 +5,7 @@ class AppError(Exception):
         self,
         message: str,
         status_code: int,
-        details: dict | None = None
+        details: dict | None = {}
     ):
         self.message = message
         self.details = details
@@ -106,4 +106,14 @@ class InvalidURLSchema(AppError):
         super().__init__(
             message=self.message,
             status_code=400
+        )
+
+
+class PermissionError(AppError): 
+    """Resource not found."""
+
+    def __init__(self, message: str):
+        super().__init__(
+            message=message,
+            status_code=403,
         )

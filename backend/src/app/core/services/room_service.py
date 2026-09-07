@@ -1,8 +1,9 @@
 from uuid import UUID
 from dataclasses import dataclass
 
-from app.core.ports import ITransaction
 from app.core.interfaceRepositories import IRoomMemberRepository, IRoomRepository
+from app.core.exceptions import NotFoundError, PermissionError
+from app.core.ports import ITransaction
 
 from app.core.entities import Room, RoomMember
 
@@ -57,7 +58,61 @@ class RoomService:
         return rooms
 
 
+    async def update_room_name(self, room_id: UUID, user_id: UUID, name: str) -> Room:
+        
+        room = await self.room_repository.get_by_id(room_id=room_id,)
+
+        if not room:
+            raise NotFoundError(
+                f"Room with id:{room_id} does not exist"
+            )
+
+        if room.owner_id != user_id:
+            raise PermissionError(
+                "User is not the room owner"
+            )
+
+        if room.name == name:
+            return room
+        
+        room.name = name
+
+        updated_room = await self.room_repository.update_name_by_id(
+            room_id=room.id,
+            name=name
+        )
+
+        try:
+            await self.transaction.commit()
+        except Exception:
+            await self.transaction.rollback()
+            raise
+
+        return updated_room
 
 
+    async def delete_room(self, room_id: UUID, user_id: UUID) -> None:
+
+        room = await self.room_repository.get_by_id(room_id=room_id,)
+
+        if not room:
+            raise NotFoundError(
+                f"Room with id:{room_id} does not exist"
+            )
+
+        if room.owner_id != user_id:
+            raise PermissionError(
+                "User is not the room owner"
+            )
+
+        await self.room_repository.delete(room_id=room_id)
+
+        try:
+            await self.transaction.commit()
+        except Exception:
+            await self.transaction.rollback()
+            raise
+
+        return
     
 
