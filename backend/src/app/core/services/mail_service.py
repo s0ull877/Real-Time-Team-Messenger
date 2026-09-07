@@ -66,3 +66,19 @@ class MailService:
         await self.broker_producer.publish(topic="emails",message=email_message)
 
         return
+
+
+    async def send_room_invitation_token(self, to: str, token: str, sender_username: str, room_id: UUID, room_name: str) -> None:
+        
+        # Create reset password token email.
+
+        email_message = EmailMessage(
+            email=to, 
+            subject=f"@{sender_username} invite you to your room '{room_name}'", 
+            body=f"Go to {settings.server_url}rooms/{room_id}/accept/{token} for accept an invitation and join!"
+        )
+
+
+        await self.broker_producer.publish(topic="emails",message=email_message)
+
+        return

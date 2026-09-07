@@ -1,6 +1,7 @@
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, HttpUrl, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, \
+    HttpUrl, field_validator, Field
 
 from app.core.exceptions import InvalidURLSchema
 
@@ -24,7 +25,7 @@ class UserProfileResponse(BaseModel):
         from_attributes=True
     )
 
-    username: str
+    username: str = Field(min_length=8, max_length=50)
     avatar_url: str | None
 
 

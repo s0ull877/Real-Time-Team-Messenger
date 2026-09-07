@@ -1,9 +1,14 @@
 from uuid import UUID
 
 from fastapi import APIRouter, status, Response
+from fastapi.responses import JSONResponse
 
-from app.interface.dependencies import CurrentUserIdDep, RoomServiceDep
-from app.interface.schemas import CreateRoom, RoomResponse, UpdateRoom, RoomMemberResponse
+from app.core.entities import ActionEnum
+
+from app.interface.dependencies import CurrentUserIdDep, RoomServiceDep, \
+    UserServiceDep, MailServiceDep, EmailActionTokenServiceDep
+from app.interface.schemas import CreateRoom, RoomResponse, UpdateRoom, \
+    RoomMemberResponse, InviteRoom
 
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
@@ -83,7 +88,6 @@ async def delete_room(
     )
 
 
-
 @router.get("/{room_id}/members", status_code=status.HTTP_200_OK)
 async def get_room_members(
     user_id: CurrentUserIdDep,
@@ -98,4 +102,72 @@ async def get_room_members(
     )
 
     return [RoomMemberResponse.model_validate(room_member) for room_member in room_members]
+
+
+@router.get("/{room_id}/leave", status_code=status.HTTP_204_NO_CONTENT)
+async def leave_room(
+    user_id: CurrentUserIdDep,
+    room_id: UUID,
+    room_service: RoomServiceDep
+) -> Response:
+
+    await room_service.leave_room(user_id=user_id, room_id=room_id)
+
+
+@router.post("/{room_id}/invite", status_code=status.HTTP_200_OK)
+async def invite_user(
+    user_id: CurrentUserIdDep,
+    room_id: UUID,
+    invite_data: InviteRoom,
+    room_service: RoomServiceDep,
+    user_service: UserServiceDep,
+    email_action_service: EmailActionTokenServiceDep,
+    mail_service: MailServiceDep
+) -> Response:
+
+    recipient = await user_service.get_by_username(username=invite_data.username)
+
+    if recipient.id == user_id:
+        return
+
+    room = await room_service.can_send_invite(sender_id=user_id, recipient_id=recipient.id, room_id=room_id)
+    if room:
+
+        user = await user_service.get_by_id(user_id=user_id)
+        _, token = await email_action_service.create(email=recipient.email, action=ActionEnum.ROOM_INVITATION)
+        await mail_service.send_room_invitation_token(
+            to=recipient.email, 
+            token=token, 
+            sender_username=user.username, 
+            room_id=room.id, 
+            room_name=room.name
+        )
+
+
+@router.get("/{room_id}/accept/{token}", status_code=status.HTTP_200_OK)
+async def accept_invitation(
+    user_id: CurrentUserIdDep,
+    room_id: UUID,
+    token: str,
+    room_service: RoomServiceDep,
+    user_service: UserServiceDep,
+    email_action_service: EmailActionTokenServiceDep
+) -> RoomMemberResponse:
+
+    email_verification = await email_action_service.get_without_verifying(token=token)
+    user = await user_service.get_by_id(user_id=user_id)
+
+    if user.email != email_verification.email:
+        return JSONResponse(
+            status_code=403,
+            content={
+                "message": "This link is for another user.",
+                "details": {}
+            },
+        )
+
+    room_member = await room_service.add_member(room_id=room_id, user_id=user_id)
+
+    return RoomMemberResponse.model_validate(room_member)
+
 

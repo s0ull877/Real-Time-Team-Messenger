@@ -1,6 +1,6 @@
 from .auth import LoginUser, RegisterUser, PasswordBody, EmailBody
 from .user import UserResponse, UserProfileResponse, UserProfileRequest
-from .room import CreateRoom, RoomResponse, UpdateRoom, RoomMemberResponse
+from .room import CreateRoom, RoomResponse, UpdateRoom, RoomMemberResponse, InviteRoom
 
 
 __all__ = [
@@ -16,4 +16,5 @@ __all__ = [
     "RoomResponse",
     "UpdateRoom",
     "RoomMemberResponse",
+    "InviteRoom",
 ]

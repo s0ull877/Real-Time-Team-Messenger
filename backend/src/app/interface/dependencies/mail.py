@@ -5,7 +5,7 @@ from fastapi import Depends, Request
 from app.core.services import EmailActionTokenService, MailService
 from app.infrastructure.repositories import EmailActionTokenRepository
 
-from .session import SessionDep
+from .session import SessionDep, SQLAlchemyTransaction
 
 
 
@@ -25,9 +25,11 @@ MailServiceDep = Annotated[
 async def get_email_action_token_service(
     session: SessionDep,
 ):
-    repository = EmailActionTokenRepository(session=session)
 
-    yield EmailActionTokenService(repository=repository)
+    yield EmailActionTokenService(
+        repository=EmailActionTokenRepository(session=session),
+        transaction=SQLAlchemyTransaction(session)
+    )
 
 
 EmailActionTokenServiceDep = Annotated[

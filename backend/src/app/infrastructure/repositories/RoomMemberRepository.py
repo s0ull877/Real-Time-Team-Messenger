@@ -1,7 +1,8 @@
 from uuid import UUID
 from datetime import datetime, timezone
 
-from sqlalchemy import select, exists
+from app.core.exceptions import NotFoundError
+from sqlalchemy import select, exists, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.entities import RoomMember
@@ -45,7 +46,20 @@ class RoomMemberRepository(IRoomMemberRepository):
         """
         Remove member from room.
         """
-        return
+        stmt = delete(RoomMemberModel)\
+            .where(
+                RoomMemberModel.user_id == room_member.user_id,
+                RoomMemberModel.room_id == room_member.room_id
+            )
+
+        result = await self.session.execute(stmt)
+
+        if result.rowcount == 0:
+            raise NotFoundError(
+                f"User with id:{room_member.user_id} not in room with id:{room_member.room_id}"
+            )
+
+        await self.session.flush()
     
 
     async def is_member(self, user_id: UUID, room_id: UUID) -> bool:

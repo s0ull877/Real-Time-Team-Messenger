@@ -21,7 +21,8 @@ class EmailActionTokenService:
         Create EmailActionToken. 
         Return tuple (created EmailActionToken entity, raw token string for sending)
         """
-        await self.repository.delete_by_email_and_action(email=email, action=action)
+        if action.value in ['verify_email', 'reset_password', 'change_email']:
+            await self.repository.delete_by_email_and_action(email=email, action=action)
 
         token = str(uuid4())
         email_action_token = EmailActionToken(
@@ -65,7 +66,6 @@ class EmailActionTokenService:
             raise InvalidActionTokenError("Verification token has expired.")
 
         email_action_token =  await self.repository.mark_as_used(token_hash=email_action_token.token_hash, used_at=datetime.now(timezone.utc))
-
         if self.transaction:
             try:
                 await self.transaction.commit()
@@ -74,6 +74,26 @@ class EmailActionTokenService:
                 raise
 
         return email_action_token
+
+
+
+    async def get_without_verifying(self, token: str) -> EmailActionToken:
+        """
+        """
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        email_action_token = await self.repository.get_by_token_hash(token_hash=token_hash)
+
+        if not email_action_token:
+            raise InvalidActionTokenError("Verification token is invalid.")
+
+        if email_action_token.used_at:
+            raise InvalidActionTokenError("Verification token has already been used.")
+
+        if email_action_token.expires_at <= datetime.now(timezone.utc):
+            raise InvalidActionTokenError("Verification token has expired.")
+
+        return email_action_token
+
 
 
 

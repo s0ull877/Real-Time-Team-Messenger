@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class RoomMemberResponse(BaseModel):
@@ -28,4 +28,9 @@ class RoomResponse(BaseModel):
     owner_id: UUID
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class InviteRoom(BaseModel):
+
+    username: str = Field(min_length=8, max_length=50)
 
